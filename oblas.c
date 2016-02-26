@@ -1,5 +1,4 @@
 #include "oblas.h"
-#include "stdio.h"
 
 typedef uint8_t octet;
 
@@ -76,22 +75,16 @@ void odivrow(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
 
 void ogemm(uint8_t *restrict a, uint8_t *restrict b, uint8_t *restrict c,
            uint16_t n, uint16_t k, uint16_t m) {
-  octet *ap, *bp, *cp = c;
+  octet *ap, *cp = c;
 
   for (int row = 0; row < n; row++, cp += m) {
-    ap = a + row * k;
+    ap = a + (row * k);
 
     for (int col = 0; col < m; col++)
       cp[col] = 0;
 
     for (int idx = 0; idx < k; idx++) {
-      if (ap[idx] == 0)
-        continue;
-      const octet *mul_row = OCT_MUL[ap[idx]];
-      bp = b + idx * m;
-      for (int col = 0; col < m; col++) {
-        cp[col] ^= mul_row[bp[col]];
-      }
+			oaxpy(cp, b, 0, idx, m, ap[idx]);
     }
   }
 }
