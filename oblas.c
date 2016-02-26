@@ -1,6 +1,5 @@
 #include "oblas.h"
 #include "stdio.h"
-#include "stdlib.h"
 
 typedef uint8_t octet;
 
@@ -44,11 +43,9 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   if (u == 0)
     return;
 
-  octet u_log = OCT_LOG[u];
+  const octet *mul_row = OCT_MUL[u];
   for (int idx = 0; idx < k; idx++) {
-    if (bp[idx] == 0)
-      continue;
-    ap[idx] ^= OCT_EXP[u_log + OCT_LOG[bp[idx]]];
+    ap[idx] ^= mul_row[bp[idx]];
   }
 }
 
@@ -65,10 +62,13 @@ void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
 void odivrow(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
   octet *ap = a + (i * k);
 
+  if (u == 0)
+    return;
+
   octet u_log = OCT_LOG[u];
 
   for (int idx = 0; idx < k; idx++) {
-    if (u == 0 || ap[idx] == 0)
+    if (ap[idx] == 0)
       continue;
     ap[idx] = OCT_EXP[OCT_LOG[ap[idx]] - u_log + 255];
   }
@@ -76,36 +76,22 @@ void odivrow(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
 
 void ogemm(uint8_t *restrict a, uint8_t *restrict b, uint8_t *restrict c,
            uint16_t n, uint16_t k, uint16_t m) {
-  octet *bp = b, *cp = c;
-  octet *a_log = malloc(k);
-  octet *b_log = malloc(m * k);
-  octet *blp = b_log;
-
-  for (int col = 0; col < m; col++, bp = b, blp += k) {
-    for (int idx = 0; idx < k; idx++, bp += m) {
-      blp[idx] = OCT_LOG[bp[col]];
-    }
-  }
+  octet *ap, *bp, *cp = c;
 
   for (int row = 0; row < n; row++, cp += m) {
-    octet *ap = a + row * k;
-    blp = b_log;
+    ap = a + row * k;
+
+    for (int col = 0; col < m; col++)
+      cp[col] = 0;
 
     for (int idx = 0; idx < k; idx++) {
-      a_log[idx] = OCT_LOG[ap[idx]];
-    }
-
-    for (int col = 0; col < m; col++, blp += k) {
-      octet acc = 0;
-
-      for (int idx = 0; idx < k; idx++) {
-        if (ap[idx] == 0 || blp[idx] == 255)
-          continue;
-        acc ^= OCT_EXP[a_log[idx] + blp[idx]];
+      if (ap[idx] == 0)
+        continue;
+      const octet *mul_row = OCT_MUL[ap[idx]];
+      bp = b + idx * m;
+      for (int col = 0; col < m; col++) {
+        cp[col] ^= mul_row[bp[col]];
       }
-      cp[col] = acc;
     }
   }
-  free(a_log);
-  free(b_log);
 }
