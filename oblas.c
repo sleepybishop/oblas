@@ -42,6 +42,9 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   if (u == 0)
     return;
 
+  if (u == 1)
+    return oaddrow(a, b, i, j, k);
+
   const octet *mul_row = OCT_MUL[u];
   for (int idx = 0; idx < k; idx++) {
     ap[idx] ^= mul_row[bp[idx]];
@@ -84,7 +87,7 @@ void ogemm(uint8_t *restrict a, uint8_t *restrict b, uint8_t *restrict c,
       cp[col] = 0;
 
     for (int idx = 0; idx < k; idx++) {
-			oaxpy(cp, b, 0, idx, m, ap[idx]);
+      oaxpy(cp, b, 0, idx, m, ap[idx]);
     }
   }
 }
