@@ -2,7 +2,7 @@
 #define OCTET_BLAS_H
 
 #include <stdint.h>
-
+#include "octmat.h"
 #include "octtables.h"
 
 #define OCTET_MUL(u, v) OCT_EXP[OCT_LOG[u] + OCT_LOG[v]]

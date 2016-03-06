@@ -1,11 +1,13 @@
 #include "oblas.h"
 
+#define ALIGNED_COLS(k)                                                        \
+  (((k) / OCTMAT_ALIGN) + (((k) % OCTMAT_ALIGN) ? 1 : 0)) * OCTMAT_ALIGN
 typedef uint8_t octet;
 
 void ocopy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
            uint16_t k) {
-  octet *ap = a + (i * k);
-  octet *bp = b + (j * k);
+  octet *ap = a + (i * ALIGNED_COLS(k));
+  octet *bp = b + (j * ALIGNED_COLS(k));
 
   for (int idx = 0; idx < k; idx++) {
     ap[idx] = bp[idx];
@@ -15,8 +17,8 @@ void ocopy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
 void oswaprow(uint8_t *restrict a, uint16_t i, uint16_t j, uint16_t k) {
   if (i == j)
     return;
-  octet *ap = a + (i * k);
-  octet *bp = a + (j * k);
+  octet *ap = a + (i * ALIGNED_COLS(k));
+  octet *bp = a + (j * ALIGNED_COLS(k));
 
   for (int idx = 0; idx < k; idx++) {
     OCTET_SWAP(ap[idx], bp[idx]);
@@ -29,15 +31,15 @@ void oswapcol(octet *restrict a, uint16_t i, uint16_t j, uint16_t k,
     return;
   octet *ap = a;
 
-  for (int idx = 0; idx < k; idx++, ap += l) {
+  for (int idx = 0; idx < k; idx++, ap += ALIGNED_COLS(l)) {
     OCTET_SWAP(ap[i], ap[j]);
   }
 }
 
 void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
            uint16_t k, uint8_t u) {
-  octet *ap = a + (i * k);
-  octet *bp = b + (j * k);
+  octet *ap = a + (i * ALIGNED_COLS(k));
+  octet *bp = b + (j * ALIGNED_COLS(k));
 
   if (u == 0)
     return;
@@ -53,8 +55,8 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
 
 void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
              uint16_t k) {
-  octet *ap = a + (i * k);
-  octet *bp = b + (j * k);
+  octet *ap = a + (i * ALIGNED_COLS(k));
+  octet *bp = b + (j * ALIGNED_COLS(k));
 
   for (int idx = 0; idx < k; idx++) {
     ap[idx] ^= bp[idx];
@@ -62,13 +64,12 @@ void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
 }
 
 void odivrow(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
-  octet *ap = a + (i * k);
+  octet *ap = a + (i * ALIGNED_COLS(k));
 
   if (u == 0)
     return;
 
   octet u_log = OCT_LOG[u];
-
   for (int idx = 0; idx < k; idx++) {
     if (ap[idx] == 0)
       continue;
@@ -80,8 +81,8 @@ void ogemm(uint8_t *restrict a, uint8_t *restrict b, uint8_t *restrict c,
            uint16_t n, uint16_t k, uint16_t m) {
   octet *ap, *cp = c;
 
-  for (int row = 0; row < n; row++, cp += m) {
-    ap = a + (row * k);
+  for (int row = 0; row < n; row++, cp += ALIGNED_COLS(m)) {
+    ap = a + (row * ALIGNED_COLS(k));
 
     for (int col = 0; col < m; col++)
       cp[col] = 0;
