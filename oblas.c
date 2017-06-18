@@ -4,91 +4,16 @@
   (((k) / OCTMAT_ALIGN) + (((k) % OCTMAT_ALIGN) ? 1 : 0)) * OCTMAT_ALIGN
 typedef uint8_t octet;
 
-void ocopy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
-           uint16_t k) {
-  octet *ap = a + (i * ALIGNED_COLS(k));
-  octet *bp = b + (j * ALIGNED_COLS(k));
-
-  for (int idx = 0; idx < k; idx++) {
-    ap[idx] = bp[idx];
-  }
-}
-
-void oswaprow(uint8_t *restrict a, uint16_t i, uint16_t j, uint16_t k) {
-  if (i == j)
-    return;
-  octet *ap = a + (i * ALIGNED_COLS(k));
-  octet *bp = a + (j * ALIGNED_COLS(k));
-
-  for (int idx = 0; idx < k; idx++) {
-    OCTET_SWAP(ap[idx], bp[idx]);
-  }
-}
-
-void oswapcol(octet *restrict a, uint16_t i, uint16_t j, uint16_t k,
-              uint16_t l) {
-  if (i == j)
-    return;
-  octet *ap = a;
-
-  for (int idx = 0; idx < k; idx++, ap += ALIGNED_COLS(l)) {
-    OCTET_SWAP(ap[i], ap[j]);
-  }
-}
-
-void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
-           uint16_t k, uint8_t u) {
-  octet *ap = a + (i * ALIGNED_COLS(k));
-  octet *bp = b + (j * ALIGNED_COLS(k));
-
-  if (u == 0)
-    return;
-
-  if (u == 1)
-    return oaddrow(a, b, i, j, k);
-
-  const octet *mul_row = OCT_MUL[u];
-  for (int idx = 0; idx < k; idx++) {
-    ap[idx] ^= mul_row[bp[idx]];
-  }
-}
-
-void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
-             uint16_t k) {
-  octet *ap = a + (i * ALIGNED_COLS(k));
-  octet *bp = b + (j * ALIGNED_COLS(k));
-
-  for (int idx = 0; idx < k; idx++) {
-    ap[idx] ^= bp[idx];
-  }
-}
-
-void odivrow(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
-  octet *ap = a + (i * ALIGNED_COLS(k));
-
-  if (u == 0)
-    return;
-
-  octet u_log = OCT_LOG[u];
-  for (int idx = 0; idx < k; idx++) {
-    if (ap[idx] == 0)
-      continue;
-    ap[idx] = OCT_EXP[OCT_LOG[ap[idx]] - u_log + 255];
-  }
-}
-
-void ogemm(uint8_t *restrict a, uint8_t *restrict b, uint8_t *restrict c,
-           uint16_t n, uint16_t k, uint16_t m) {
-  octet *ap, *cp = c;
-
-  for (int row = 0; row < n; row++, cp += ALIGNED_COLS(m)) {
-    ap = a + (row * ALIGNED_COLS(k));
-
-    for (int col = 0; col < m; col++)
-      cp[col] = 0;
-
-    for (int idx = 0; idx < k; idx++) {
-      oaxpy(cp, b, 0, idx, m, ap[idx]);
-    }
-  }
-}
+#ifdef OBLAS_SSE
+#include "oblas_sse.c"
+#else
+#ifdef OBLAS_AVX
+#include "oblas_avx.c"
+#else
+#ifdef OBLAS_NEON
+#include "oblas_neon.c"
+#else
+#include "oblas_classic.c"
+#endif
+#endif
+#endif

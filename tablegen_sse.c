@@ -52,19 +52,33 @@ int main(int argc, char *argv[]) {
   fprintf(stdout, "static const uint16_t OCT_EXP_SIZE = sizeof(OCT_EXP) / "
                   "sizeof(OCT_EXP[0]);\n\n");
 
-  fprintf(stdout, "static const uint8_t OCT_MUL[256][256] = {");
+  fprintf(stdout, "static const uint8_t OCT_MUL_LO[256][16] = {");
   for (int i = 0; i <= UINT8_MAX; i++) {
-    fprintf(stdout, "\n{");
-    for (int j = 0; j <= UINT8_MAX; j++) {
+    fprintf(stdout, "{\n");
+    for (int j = 0; j < 16; j++) {
       if (i == 0 || j == 0) {
         fprintf(stdout, "%d,", 0);
       } else {
         fprintf(stdout, "%d,", OCT_EXP[(OCT_LOG[i] + OCT_LOG[j]) % 255]);
       }
     }
-
     fprintf(stdout, "},\n");
   }
   fprintf(stdout, "};\n\n");
+
+  fprintf(stdout, "static const uint8_t OCT_MUL_HI[256][16] = {");
+  for (int i = 0; i <= UINT8_MAX; i++) {
+    fprintf(stdout, "{\n");
+    for (int j = 0; j < 16; j++) {
+      if (i == 0 || j == 0) {
+        fprintf(stdout, "%d,", 0);
+      } else {
+        fprintf(stdout, "%d,", OCT_EXP[(OCT_LOG[i] + OCT_LOG[j << 4]) % 255]);
+      }
+    }
+    fprintf(stdout, "},\n");
+  }
+  fprintf(stdout, "};\n\n");
+
   return 0;
 }
