@@ -74,6 +74,12 @@ void odivrow(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
   }
 }
 
+void ozero(uint8_t *restrict a, uint16_t i, size_t k) {
+  octet *ap = a + (i * ALIGNED_COLS(k));
+  for (int idx = 0; idx < k; idx++)
+    ap[idx] = 0;
+}
+
 void ogemm(uint8_t *restrict a, uint8_t *restrict b, uint8_t *restrict c,
            uint16_t n, uint16_t k, uint16_t m) {
   octet *ap, *cp = c;
@@ -81,9 +87,7 @@ void ogemm(uint8_t *restrict a, uint8_t *restrict b, uint8_t *restrict c,
   for (int row = 0; row < n; row++, cp += ALIGNED_COLS(m)) {
     ap = a + (row * ALIGNED_COLS(k));
 
-    for (int col = 0; col < m; col++)
-      cp[col] = 0;
-
+    ozero(cp, 0, m);
     for (int idx = 0; idx < k; idx++) {
       oaxpy(cp, b, 0, idx, m, ap[idx]);
     }

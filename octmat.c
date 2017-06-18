@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "oblas.h"
 #include "octmat.h"
 
 void om_resize(octmat *v, uint16_t r, uint16_t c) {
@@ -14,7 +15,7 @@ void om_resize(octmat *v, uint16_t r, uint16_t c) {
   if (posix_memalign(&aligned, OCTMAT_ALIGN, r * v->cols_al) != 0) {
     exit(ENOMEM);
   }
-  memset(aligned, 0, r * v->cols_al);
+  ozero(aligned, 0, v->cols_al * r);
   v->data = (uint8_t *)aligned;
 }
 
