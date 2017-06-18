@@ -54,25 +54,22 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   if (u == 1)
     return oaddrow(a, b, i, j, k);
 
-  const octet *mtab_hi = OCT_MUL_HI[u];
-  const octet *mtab_lo = OCT_MUL_LO[u];
-
-  const __m128i clr_mask = _mm_set1_epi8(0x0f);
-  const __m128i urow_hi = _mm_loadu_si128((__m128i *)mtab_hi);
-  const __m128i urow_lo = _mm_loadu_si128((__m128i *)mtab_lo);
+  const __m128i mask = _mm_set1_epi8(0x0f);
+  const __m128i urow_hi = _mm_loadu_si128((__m128i *)OCT_MUL_HI[u]);
+  const __m128i urow_lo = _mm_loadu_si128((__m128i *)OCT_MUL_LO[u]);
 
   __m128i *ap128 = (__m128i *)ap;
   __m128i *bp128 = (__m128i *)bp;
   for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
-    __m128i x0 = _mm_loadu_si128(bp128++);
-    __m128i l0 = _mm_and_si128(x0, clr_mask);
-    x0 = _mm_srli_epi64(x0, 4);
-    __m128i h0 = _mm_and_si128(x0, clr_mask);
-    l0 = _mm_shuffle_epi8(urow_lo, l0);
-    h0 = _mm_shuffle_epi8(urow_hi, h0);
+    __m128i bx = _mm_loadu_si128(bp128++);
+    __m128i lo = _mm_and_si128(bx, mask);
+    bx = _mm_srli_epi64(bx, 4);
+    __m128i hi = _mm_and_si128(bx, mask);
+    lo = _mm_shuffle_epi8(urow_lo, lo);
+    hi = _mm_shuffle_epi8(urow_hi, hi);
 
     _mm_storeu_si128(
-        ap128, _mm_xor_si128(_mm_loadu_si128(ap128), _mm_xor_si128(l0, h0)));
+        ap128, _mm_xor_si128(_mm_loadu_si128(ap128), _mm_xor_si128(lo, hi)));
     ap128++;
   }
 }
