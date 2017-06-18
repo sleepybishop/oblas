@@ -1,6 +1,6 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 
 #include "octmat.h"
 
@@ -22,7 +22,13 @@ void om_copy(octmat *v1, octmat *v0) {
   v1->rows = v0->rows;
   v1->cols = v0->cols;
   v1->cols_al = v0->cols_al;
-  v1->data = malloc(v0->rows * v0->cols_al);
+
+  if (!v1->data) {
+    void *aligned = NULL;
+    if (posix_memalign(&aligned, OCTMAT_ALIGN, v0->rows * v0->cols_al) != 0)
+      exit(ENOMEM);
+    v1->data = (uint8_t *)aligned;
+  }
   memcpy(v1->data, v0->data, v0->rows * v0->cols_al);
 }
 

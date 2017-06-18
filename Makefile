@@ -2,10 +2,11 @@ CPPFLAGS= -D_DEFAULT_SOURCE
 CFLAGS  = -O3 -std=c99 -Wall -ftree-vectorize -mmmx -msse -msse2 -msse3 -march=native -funroll-loops
 LDFLAGS +=  
 
-all: oblas.o octmat.o
+OBJ=oblas.o octmat.o
 
-tablegen: tablegen.c
-	$(CC) $(CFLAGS) -o$@ $< $(LDFLAGS)
+all : liboblas.a
+
+tablegen: tablegen.o
 
 octtables.h: tablegen
 	./$< > $@
@@ -13,10 +14,16 @@ octtables.h: tablegen
 
 oblas.o: oblas.c oblas.h octtables.h
 
-.PHONY: clean
-clean:
-	$(RM) tablegen *.o
+liboblas.a: $(OBJ)
+	$(AR) rcs $@ $^
 
-.PHONY: indent
+.PHONY: clean indent scan
+clean:
+	$(RM) *.o *.a
+
 indent:
 	clang-format -style=LLVM -i *.c *.h
+
+scan:
+	scan-build $(MAKE) clean all
+

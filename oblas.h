@@ -1,14 +1,12 @@
 #ifndef OCTET_BLAS_H
 #define OCTET_BLAS_H
 
-#include <stdint.h>
 #include "octmat.h"
 #include "octtables.h"
+#include <stdint.h>
 
 #define OCTET_MUL(u, v) OCT_EXP[OCT_LOG[u] + OCT_LOG[v]]
-
 #define OCTET_DIV(u, v) OCT_EXP[OCT_LOG[u] - OCT_LOG[v] + 255]
-
 #define OCTET_SWAP(u, v)                                                       \
   do {                                                                         \
     uint8_t __tmp = (u);                                                       \

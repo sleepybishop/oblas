@@ -2,6 +2,7 @@
 #define OCTMAT_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #ifndef OCTMAT_ALIGN
@@ -25,5 +26,6 @@ typedef struct {
 void om_resize(octmat *v, uint16_t r, uint16_t c);
 void om_copy(octmat *v1, octmat *v0);
 void om_destroy(octmat *v);
+void om_print(FILE *stream, octmat m);
 
 #endif
