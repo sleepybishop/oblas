@@ -20,8 +20,13 @@ void oswaprow(uint8_t *restrict a, uint16_t i, uint16_t j, uint16_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = a + (j * ALIGNED_COLS(k));
 
-  for (int idx = 0; idx < k; idx++) {
-    OCTET_SWAP(ap[idx], bp[idx]);
+  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+    __m128i *ap128 = (__m128i *)(ap + idx);
+    __m128i *bp128 = (__m128i *)(bp + idx);
+    __m128i atmp = _mm_loadu_si128((__m128i *)(ap128));
+    __m128i btmp = _mm_loadu_si128((__m128i *)(bp128));
+    _mm_storeu_si128(ap128, btmp);
+    _mm_storeu_si128(bp128, atmp);
   }
 }
 
@@ -54,7 +59,7 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   const __m128i urow_hi = _mm_loadu_si128((__m128i *)mtab_hi);
   const __m128i urow_lo = _mm_loadu_si128((__m128i *)mtab_lo);
 
-  for (int idx = 0; idx < (k / 16) * 16; idx += 16) {
+  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     __m128i x0 = _mm_loadu_si128((__m128i *)(bp + idx));
     __m128i l0 = _mm_and_si128(x0, clr_mask);
     x0 = _mm_srli_epi64(x0, 4);
@@ -66,10 +71,6 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
     _mm_storeu_si128(
         omg, _mm_xor_si128(_mm_loadu_si128(omg), _mm_xor_si128(l0, h0)));
   }
-
-  for (int idx = (k / 16) * 16; idx < k; idx++) {
-    ap[idx] ^= mtab_hi[bp[idx] >> 4] ^ mtab_lo[bp[idx] & 0xf];
-  }
 }
 
 void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
@@ -77,13 +78,10 @@ void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = b + (j * ALIGNED_COLS(k));
 
-  for (int idx = 0; idx < (k / 16) * 16; idx += 16) {
+  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     _mm_storeu_si128((__m128i *)(ap + idx),
                      _mm_xor_si128(_mm_loadu_si128((__m128i *)(ap + idx)),
                                    _mm_loadu_si128((__m128i *)(bp + idx))));
-  }
-  for (int idx = (k / 16) * 16; idx < k; idx++) {
-    ap[idx] ^= bp[idx];
   }
 }
 

@@ -1,4 +1,5 @@
 #include "oblas.h"
+#include "octmul.h"
 
 void ocopy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
            uint16_t k) {
