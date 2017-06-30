@@ -95,12 +95,20 @@ void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
   if (u == 0)
     return;
 
-  const octet *urow_hi = OCT_MUL_HI[u];
-  const octet *urow_lo = OCT_MUL_LO[u];
-  for (int idx = 0; idx < k; idx++) {
-    octet a_lo = ap[idx] & 0x0f;
-    octet a_hi = (ap[idx] & 0xf0) >> 4;
-    ap[idx] = urow_hi[a_hi] ^ urow_lo[a_lo];
+  const __m128i mask = _mm_set1_epi8(0x0f);
+  const __m128i urow_hi = _mm_loadu_si128((__m128i *)OCT_MUL_HI[u]);
+  const __m128i urow_lo = _mm_loadu_si128((__m128i *)OCT_MUL_LO[u]);
+
+  __m128i *ap128 = (__m128i *)ap;
+  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+    __m128i ax = _mm_loadu_si128(ap128);
+    __m128i lo = _mm_and_si128(ax, mask);
+    ax = _mm_srli_epi64(ax, 4);
+    __m128i hi = _mm_and_si128(ax, mask);
+    lo = _mm_shuffle_epi8(urow_lo, lo);
+    hi = _mm_shuffle_epi8(urow_hi, hi);
+
+    _mm_storeu_si128(ap128++, _mm_xor_si128(lo, hi));
   }
 }
 
