@@ -1,7 +1,7 @@
 #include <immintrin.h> /* AVX */
 
 #include "oblas.h"
-#include "octmul_sse.h"
+#include "octmul_hilo.h"
 
 void ocopy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
            uint16_t k) {
