@@ -89,17 +89,18 @@ void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   }
 }
 
-void odivrow(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
+void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
   octet *ap = a + (i * ALIGNED_COLS(k));
 
   if (u == 0)
     return;
 
-  octet u_log = OCT_LOG[u];
+  const octet *urow_hi = OCT_MUL_HI[u];
+  const octet *urow_lo = OCT_MUL_LO[u];
   for (int idx = 0; idx < k; idx++) {
-    if (ap[idx] == 0)
-      continue;
-    ap[idx] = OCT_EXP[OCT_LOG[ap[idx]] - u_log + 255];
+    octet a_lo = ap[idx] & 0x0f;
+    octet a_hi = (ap[idx] & 0xf0) >> 4;
+    ap[idx] = urow_hi[a_hi] ^ urow_lo[a_lo];
   }
 }
 

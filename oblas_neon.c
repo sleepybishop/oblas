@@ -60,17 +60,15 @@ void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   }
 }
 
-void odivrow(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
+void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
   octet *ap = a + (i * ALIGNED_COLS(k));
 
   if (u == 0)
     return;
 
-  octet u_log = OCT_LOG[u];
+  const octet *mul_row = OCT_MUL[u];
   for (int idx = 0; idx < k; idx++) {
-    if (ap[idx] == 0)
-      continue;
-    ap[idx] = OCT_EXP[OCT_LOG[ap[idx]] - u_log + 255];
+    ap[idx] = mul_row[ap[idx]];
   }
 }
 
