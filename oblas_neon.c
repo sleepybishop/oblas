@@ -44,9 +44,12 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   if (u == 1)
     return oaddrow(a, b, i, j, k);
 
-  const octet *mul_row = OCT_MUL[u];
+  const octet *urow_hi = OCT_MUL_HI[u];
+  const octet *urow_lo = OCT_MUL_LO[u];
   for (int idx = 0; idx < k; idx++) {
-    ap[idx] ^= mul_row[bp[idx]];
+    octet b_lo = bp[idx] & 0x0f;
+    octet b_hi = (bp[idx] & 0xf0) >> 4;
+    ap[idx] ^= urow_hi[b_hi] ^ urow_lo[b_lo];
   }
 }
 
@@ -66,9 +69,12 @@ void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
   if (u == 0)
     return;
 
-  const octet *mul_row = OCT_MUL[u];
+  const octet *urow_hi = OCT_MUL_HI[u];
+  const octet *urow_lo = OCT_MUL_LO[u];
   for (int idx = 0; idx < k; idx++) {
-    ap[idx] = mul_row[ap[idx]];
+    octet a_lo = ap[idx] & 0x0f;
+    octet a_hi = (ap[idx] & 0xf0) >> 4;
+    ap[idx] = urow_hi[a_hi] ^ urow_lo[a_lo];
   }
 }
 
