@@ -3,15 +3,25 @@
 #include "oblas.h"
 #include "octmul_hilo.h"
 
+/* GCC doesn't include some intrinsics */
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC)
+static inline __m256i __attribute__((__always_inline__))
+_mm256_loadu2_m128i(const __m128i *const hiaddr, const __m128i *const loaddr) {
+  return _mm256_inserti128_si256(
+      _mm256_castsi128_si256(_mm_loadu_si128(loaddr)), _mm_loadu_si128(hiaddr),
+      1);
+}
+#endif
+
 void ocopy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
            uint16_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = b + (j * ALIGNED_COLS(k));
 
-  __m128i *ap128 = (__m128i *)ap;
-  __m128i *bp128 = (__m128i *)bp;
+  __m256i *ap256 = (__m256i *)ap;
+  __m256i *bp256 = (__m256i *)bp;
   for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
-    _mm_storeu_si128(ap128++, _mm_loadu_si128(bp128++));
+    _mm256_storeu_si256(ap256++, _mm256_loadu_si256(bp256++));
   }
 }
 
@@ -21,13 +31,13 @@ void oswaprow(uint8_t *restrict a, uint16_t i, uint16_t j, uint16_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = a + (j * ALIGNED_COLS(k));
 
-  __m128i *ap128 = (__m128i *)ap;
-  __m128i *bp128 = (__m128i *)bp;
+  __m256i *ap256 = (__m256i *)ap;
+  __m256i *bp256 = (__m256i *)bp;
   for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
-    __m128i atmp = _mm_loadu_si128((__m128i *)(ap128));
-    __m128i btmp = _mm_loadu_si128((__m128i *)(bp128));
-    _mm_storeu_si128(ap128++, btmp);
-    _mm_storeu_si128(bp128++, atmp);
+    __m256i atmp = _mm256_loadu_si256((__m256i *)(ap256));
+    __m256i btmp = _mm256_loadu_si256((__m256i *)(bp256));
+    _mm256_storeu_si256(ap256++, btmp);
+    _mm256_storeu_si256(bp256++, atmp);
   }
 }
 
@@ -53,23 +63,25 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   if (u == 1)
     return oaddrow(a, b, i, j, k);
 
-  const __m128i mask = _mm_set1_epi8(0x0f);
-  const __m128i urow_hi = _mm_loadu_si128((__m128i *)OCT_MUL_HI[u]);
-  const __m128i urow_lo = _mm_loadu_si128((__m128i *)OCT_MUL_LO[u]);
+  const __m256i mask = _mm256_set1_epi8(0x0f);
+  const __m256i urow_hi =
+      _mm256_loadu2_m128i((__m128i *)OCT_MUL_HI[u], (__m128i *)OCT_MUL_HI[u]);
+  const __m256i urow_lo =
+      _mm256_loadu2_m128i((__m128i *)OCT_MUL_LO[u], (__m128i *)OCT_MUL_LO[u]);
 
-  __m128i *ap128 = (__m128i *)ap;
-  __m128i *bp128 = (__m128i *)bp;
+  __m256i *ap256 = (__m256i *)ap;
+  __m256i *bp256 = (__m256i *)bp;
   for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
-    __m128i bx = _mm_loadu_si128(bp128++);
-    __m128i lo = _mm_and_si128(bx, mask);
-    bx = _mm_srli_epi64(bx, 4);
-    __m128i hi = _mm_and_si128(bx, mask);
-    lo = _mm_shuffle_epi8(urow_lo, lo);
-    hi = _mm_shuffle_epi8(urow_hi, hi);
+    __m256i bx = _mm256_loadu_si256(bp256++);
+    __m256i lo = _mm256_and_si256(bx, mask);
+    bx = _mm256_srli_epi64(bx, 4);
+    __m256i hi = _mm256_and_si256(bx, mask);
+    lo = _mm256_shuffle_epi8(urow_lo, lo);
+    hi = _mm256_shuffle_epi8(urow_hi, hi);
 
-    _mm_storeu_si128(
-        ap128, _mm_xor_si128(_mm_loadu_si128(ap128), _mm_xor_si128(lo, hi)));
-    ap128++;
+    _mm256_storeu_si256(ap256, _mm256_xor_si256(_mm256_loadu_si256(ap256),
+                                                _mm256_xor_si256(lo, hi)));
+    ap256++;
   }
 }
 
@@ -78,13 +90,13 @@ void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = b + (j * ALIGNED_COLS(k));
 
-  __m128i *ap128 = (__m128i *)ap;
-  __m128i *bp128 = (__m128i *)bp;
+  __m256i *ap256 = (__m256i *)ap;
+  __m256i *bp256 = (__m256i *)bp;
   for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
-    _mm_storeu_si128(
-        ap128, _mm_xor_si128(_mm_loadu_si128(ap128), _mm_loadu_si128(bp128)));
-    ap128++;
-    bp128++;
+    _mm256_storeu_si256(ap256, _mm256_xor_si256(_mm256_loadu_si256(ap256),
+                                                _mm256_loadu_si256(bp256)));
+    ap256++;
+    bp256++;
   }
 }
 
@@ -94,30 +106,32 @@ void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
   if (u == 0)
     return;
 
-  const __m128i mask = _mm_set1_epi8(0x0f);
-  const __m128i urow_hi = _mm_loadu_si128((__m128i *)OCT_MUL_HI[u]);
-  const __m128i urow_lo = _mm_loadu_si128((__m128i *)OCT_MUL_LO[u]);
+  const __m256i mask = _mm256_set1_epi8(0x0f);
+  const __m256i urow_hi =
+      _mm256_loadu2_m128i((__m128i *)OCT_MUL_HI[u], (__m128i *)OCT_MUL_HI[u]);
+  const __m256i urow_lo =
+      _mm256_loadu2_m128i((__m128i *)OCT_MUL_LO[u], (__m128i *)OCT_MUL_LO[u]);
 
-  __m128i *ap128 = (__m128i *)ap;
+  __m256i *ap256 = (__m256i *)ap;
   for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
-    __m128i ax = _mm_loadu_si128(ap128);
-    __m128i lo = _mm_and_si128(ax, mask);
-    ax = _mm_srli_epi64(ax, 4);
-    __m128i hi = _mm_and_si128(ax, mask);
-    lo = _mm_shuffle_epi8(urow_lo, lo);
-    hi = _mm_shuffle_epi8(urow_hi, hi);
+    __m256i ax = _mm256_loadu_si256(ap256);
+    __m256i lo = _mm256_and_si256(ax, mask);
+    ax = _mm256_srli_epi64(ax, 4);
+    __m256i hi = _mm256_and_si256(ax, mask);
+    lo = _mm256_shuffle_epi8(urow_lo, lo);
+    hi = _mm256_shuffle_epi8(urow_hi, hi);
 
-    _mm_storeu_si128(ap128++, _mm_xor_si128(lo, hi));
+    _mm256_storeu_si256(ap256++, _mm256_xor_si256(lo, hi));
   }
 }
 
 void ozero(uint8_t *restrict a, uint16_t i, size_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
-  __m128i *ap128 = (__m128i *)ap;
-  __m128i z128 = _mm_setzero_si128();
+  __m256i *ap256 = (__m256i *)ap;
+  __m256i z256 = _mm256_setzero_si256();
 
   for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
-    _mm_storeu_si128(ap128++, z128);
+    _mm256_storeu_si256(ap256++, z256);
   }
 }
 
