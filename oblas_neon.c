@@ -66,7 +66,7 @@ void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
 void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
   octet *ap = a + (i * ALIGNED_COLS(k));
 
-  if (u == 0)
+  if (u < 2)
     return;
 
   const octet *urow_hi = OCT_MUL_HI[u];
