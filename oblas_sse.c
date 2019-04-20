@@ -139,41 +139,15 @@ void ogemm(uint8_t *restrict a, uint8_t *restrict b, uint8_t *restrict c,
 void onnz(uint8_t *a, uint16_t i, uint16_t s, uint16_t e, uint16_t k, int *nnz,
           int *ones, int ones_idx[]) {
   octet *ap = a + (i * ALIGNED_COLS(k));
-  __m128i *ap128 = (__m128i *)ap;
-  __m128i z128 = _mm_setzero_si128();
-  __m128i o128 = _mm_set1_epi8(1);
 
-  int s1 = s - (s % OCTMAT_ALIGN);
-  int b1 = s - s1;              // bits to ignore from start
-  int b2 = ALIGNED_COLS(e) - e; // bits to ignore from end
-  int firstmask = (1 << b1) - 1;
-  int lastmask = ((1 << b2) - 1) << (OCTMAT_ALIGN - b2);
-
-  ap128 += s1 / OCTMAT_ALIGN;
-  for (int idx = s1; idx < ALIGNED_COLS(e); idx += OCTMAT_ALIGN) {
-    __m128i atmp = _mm_loadu_si128((__m128i *)(ap128++));
-    __m128i zeroes = _mm_cmpeq_epi8(atmp, z128);
-    __m128i oneses = _mm_cmpeq_epi8(atmp, o128);
-
-    int zeromask = _mm_movemask_epi8(zeroes) | 0xffff0000;
-    int onesmask = _mm_movemask_epi8(oneses) | 0xffff0000;
-    if (idx == s1) {
-      zeromask |= firstmask;
-      onesmask |= firstmask;
-    }
-    if (idx == ALIGNED_COLS(e) - OCTMAT_ALIGN) {
-      zeromask |= lastmask;
-      onesmask |= lastmask;
-    }
-
-    *nnz += __builtin_popcountll(~zeromask);
-    *ones += __builtin_popcountll(~onesmask);
-    if (*ones > 0) {
-      int oneat = __builtin_ctz(~onesmask);
-      ones_idx[0] = idx + oneat - s;
-      if (*ones > 1) {
-        onesmask |= 1 << oneat;
-        ones_idx[1] = idx + __builtin_ctz(~onesmask) - s;
+  for (int idx = s; idx < e; idx++) {
+    if (ap[idx] != 0) {
+      *nnz += 1;
+      if (ap[idx] == 1) {
+        *ones += 1;
+        if (*ones <= 2) {
+          ones_idx[*ones - 1] = idx - s;
+        }
       }
     }
   }
