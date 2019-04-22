@@ -5,7 +5,7 @@ CPPFLAGS= -D_DEFAULT_SOURCE
 
 CFLAGS  = -O3 -std=c99 -Wall -march=native -funroll-loops
 
-OBJ=oblas.o octmat.o
+OBJ=oblas.o octmat.o sparsemat.o
 
 all: liboblas.a
 
