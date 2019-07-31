@@ -41,13 +41,18 @@ void om_destroy(octmat *v) {
   v->data = NULL;
 }
 
-void om_print(FILE *stream, octmat m) {
-  fprintf(stream, "[%ux%u]\n", m.rows, m.cols);
+void om_print(octmat m, FILE *stream) {
+  fprintf(stream, "dense [%ux%u]\n", m.rows, m.cols);
+  fprintf(stream, "|     ");
+  for (int j = 0; j < m.cols; j++) {
+    fprintf(stream, "| %03d ", j);
+  }
+  fprintf(stream, "|\n");
   for (int i = 0; i < m.rows; i++) {
-    fprintf(stream, "|%3d", om_A(m, i, 0));
+    fprintf(stream, "| %03d | %3d ", i, om_A(m, i, 0));
     for (int j = 1; j < m.cols; j++) {
-      fprintf(stream, ", %3d", om_A(m, i, j));
+      fprintf(stream, "| %3d ", om_A(m, i, j));
     }
-    fprintf(stream, "  |\n");
+    fprintf(stream, "|\n");
   }
 }

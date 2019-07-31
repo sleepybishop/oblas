@@ -26,6 +26,6 @@ typedef struct {
 void om_resize(octmat *v, uint16_t r, uint16_t c);
 void om_copy(octmat *v1, octmat *v0);
 void om_destroy(octmat *v);
-void om_print(FILE *stream, octmat m);
+void om_print(octmat m, FILE *stream);
 
 #endif
