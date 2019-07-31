@@ -37,15 +37,10 @@ void sv_set(sparsevec *v, uint16_t r, uint8_t val);
 void sv_remove(sparsevec *v, uint16_t r);
 void sv_destroy(sparsevec *v);
 
-void sv_print(sparsevec *v, FILE *stream);
-void sv_densify(sparsevec *v, uint8_t *d);
 void sv_copy(sparsevec *v, sparsevec *w);
-void sv_axpy(sparsevec *v, sparsevec *w, uint8_t u);
-void sv_add(sparsevec *v, sparsevec *w);
+void sv_axpy(sparsevec *v, sparsevec *w, uint8_t u, uint16_t cols);
 
 void sv_scal(sparsevec *v, uint16_t k, uint8_t u);
-void sv_nnz(sparsevec *v, uint16_t s, uint16_t e, int *nnz, int *ones,
-            int ones_idx[]);
 
 sparsemat sm_new(uint16_t rows, uint16_t cols);
 void sm_destroy(sparsemat *a);
@@ -57,7 +52,6 @@ void sm_swaprow(sparsemat *a, uint16_t i, uint16_t j);
 void sm_swapcol(sparsemat *a, uint16_t i, uint16_t j);
 
 void sm_axpy(sparsemat *a, sparsemat *b, uint16_t i, uint16_t j, uint8_t u);
-void sm_addrow(sparsemat *a, sparsemat *b, uint16_t i, uint16_t j);
 void sm_scal(sparsemat *a, uint16_t i, uint8_t u);
 void sm_gemm(sparsemat *a, sparsemat *b, sparsemat *c);
 void sm_nnz(sparsemat *a, uint16_t i, uint16_t s, uint16_t e, int *nnz,

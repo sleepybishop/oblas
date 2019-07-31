@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sparsemat.h"
 #include "octmul_hilo.h"
+#include "sparsemat.h"
 
 static int binsearch(uint16_t *a, int L, int R, uint16_t x) {
   int idx;
@@ -44,8 +44,10 @@ uint16_t sv_get(sparsevec *v, uint16_t i) {
 void sv_set(sparsevec *v, uint16_t i, uint8_t val) {
   int idx = binsearch(v->idxs.a, 0, kv_size(v->idxs) - 1, i);
   if (kv_size(v->idxs) == 0 || kv_size(v->idxs) <= idx) {
-    kv_push(uint16_t, v->idxs, i);
-    kv_push(uint8_t, v->vals, val);
+    if (val > 0) {
+      kv_push(uint16_t, v->idxs, i);
+      kv_push(uint8_t, v->vals, val);
+    }
   } else if (kv_size(v->idxs) > idx) {
     if (kv_A(v->idxs, idx) == i) {
       kv_A(v->vals, idx) = val;
@@ -79,179 +81,38 @@ void sv_destroy(sparsevec *v) {
     kv_destroy(v->vals);
 }
 
-void sv_print(sparsevec *v, FILE *stream) {
-  if (kv_size(v->idxs) == 0) {
-    fprintf(stream, "| nul |\n\n");
-    return;
-  }
-  fprintf(stream, "|");
-  for (int idx = 0; idx <= v->idxs.a[v->idxs.n - 1]; idx++) {
-    fprintf(stream, " %3d |", idx);
-  }
-  fprintf(stream, "\n|");
-  for (int idx = 0; idx <= v->idxs.a[v->idxs.n - 1]; idx++) {
-    fprintf(stream, "-----|");
-  }
-  fprintf(stream, "\n|");
-  for (int idx = 0; idx <= v->idxs.a[v->idxs.n - 1]; idx++) {
-    fprintf(stream, " %3d |", sv_get(v, idx));
-  }
-  fprintf(stream, "\n|");
-  for (int idx = 0; idx <= v->idxs.a[v->idxs.n - 1]; idx++) {
-    fprintf(stream, "=====|");
-  }
-  fprintf(stream, "\n\n");
-}
-
-void sv_densify(sparsevec *v, uint8_t *d) {
-  if (kv_size(v->idxs) == 0) {
-    return;
-  }
-  for (int idx = 0; idx < kv_size(v->idxs); idx++) {
-    d[kv_A(v->idxs, idx)] = kv_A(v->vals, idx);
-  }
-}
-
 void sv_copy(sparsevec *v, sparsevec *w) {
   kv_copy(uint16_t, v->idxs, w->idxs);
   kv_copy(uint8_t, v->vals, w->vals);
 }
 
-void sv_axpy(sparsevec *v, sparsevec *w, uint8_t u) {
-  int i = 0, j = 0;
-  int m = kv_size(v->idxs), n = kv_size(w->idxs);
+void sv_axpy(sparsevec *v, sparsevec *w, uint8_t u, uint16_t cols) {
+  uint8_t tmp[cols];
 
   if (u == 0)
     return;
 
-  if (u == 1)
-    return sv_add(v, w);
-
-  sparsevec za = sv_new(m + n);
-  sparsevec *z = &za;
-
+  memset(&tmp, 0, cols);
   const uint8_t *urow_hi = OCT_MUL_HI[u];
   const uint8_t *urow_lo = OCT_MUL_LO[u];
-  while (i < m && j < n) {
-    uint8_t w_lo = (kv_A(w->vals, j) & 0x0f);
-    uint8_t w_hi = (kv_A(w->vals, j) & 0xf0) >> 4;
-
-    if (kv_A(v->idxs, i) < kv_A(w->idxs, j)) {
-      if (kv_A(v->vals, i) > 0) {
-        kv_push(uint16_t, z->idxs, kv_A(v->idxs, i));
-        kv_push(uint8_t, z->vals, kv_A(v->vals, i));
-      }
-      i++;
-    } else if (kv_A(v->idxs, i) > kv_A(w->idxs, j)) {
-      uint8_t val = urow_hi[w_hi] ^ urow_lo[w_lo];
-      if (val > 0) {
-        kv_push(uint16_t, z->idxs, kv_A(w->idxs, j));
-        kv_push(uint8_t, z->vals, val);
-      }
-      j++;
-    } else {
-      uint8_t val = kv_A(v->vals, i) ^ urow_hi[w_hi] ^ urow_lo[w_lo];
-      if (val > 0) {
-        kv_push(uint16_t, z->idxs, kv_A(v->idxs, i));
-        kv_push(uint8_t, z->vals, val);
-      }
-      i++;
-      j++;
-    }
-  }
-
-  while (i < m) {
-    if (kv_A(v->vals, i) > 0) {
-      kv_push(uint16_t, z->idxs, kv_A(v->idxs, i));
-      kv_push(uint8_t, z->vals, kv_A(v->vals, i));
-    }
-    i++;
-  }
-
-  while (j < n) {
+  for (int j = 0; j < kv_size(w->idxs); j++) {
     uint8_t w_lo = (kv_A(w->vals, j) & 0x0f);
     uint8_t w_hi = (kv_A(w->vals, j) & 0xf0) >> 4;
     uint8_t val = urow_hi[w_hi] ^ urow_lo[w_lo];
-
-    if (kv_A(w->vals, j) > 0) {
-      kv_push(uint16_t, z->idxs, kv_A(w->idxs, j));
-      kv_push(uint8_t, z->vals, val);
-    }
-    j++;
+    tmp[kv_A(w->idxs, j)] = val;
+  }
+  for (int i = 0; i < kv_size(v->idxs); i++) {
+    tmp[kv_A(v->idxs, i)] ^= kv_A(v->vals, i);
   }
 
-  uint16_t *idxs = v->idxs.a;
-  uint8_t *vals = v->vals.a;
-  v->idxs.a = z->idxs.a;
-  v->idxs.m = z->idxs.m;
-  v->idxs.n = z->idxs.n;
-
-  v->vals.a = z->vals.a;
-  v->vals.m = z->vals.m;
-  v->vals.n = z->vals.n;
-
-  free(idxs);
-  free(vals);
-}
-
-void sv_add(sparsevec *v, sparsevec *w) {
-  int i = 0, j = 0;
-  int m = kv_size(v->idxs), n = kv_size(w->idxs);
-  sparsevec za = sv_new(m + n);
-  sparsevec *z = &za;
-
-  while (i < m && j < n) {
-    if (kv_A(v->idxs, i) < kv_A(w->idxs, j)) {
-      if (kv_A(v->vals, i) > 0) {
-        kv_push(uint16_t, z->idxs, kv_A(v->idxs, i));
-        kv_push(uint8_t, z->vals, kv_A(v->vals, i));
-      }
-      i++;
-    } else if (kv_A(v->idxs, i) > kv_A(w->idxs, j)) {
-      if (kv_A(w->vals, j) > 0) {
-        kv_push(uint16_t, z->idxs, kv_A(w->idxs, j));
-        kv_push(uint8_t, z->vals, kv_A(w->vals, j));
-      }
-      j++;
-    } else {
-      uint8_t o = kv_A(v->vals, i) ^ kv_A(w->vals, j);
-      if (o > 0) {
-        kv_push(uint16_t, z->idxs, kv_A(v->idxs, i));
-        kv_push(uint8_t, z->vals, kv_A(v->vals, i) ^ kv_A(w->vals, j));
-      }
-      i++;
-      j++;
+  kv_size(v->idxs) = 0;
+  kv_size(v->vals) = 0;
+  for (int idx = 0; idx < cols; idx++) {
+    if (tmp[idx] > 0) {
+      kv_push(uint16_t, v->idxs, idx);
+      kv_push(uint8_t, v->vals, tmp[idx]);
     }
   }
-
-  while (i < m) {
-    if (kv_A(v->vals, i) > 0) {
-      kv_push(uint16_t, z->idxs, kv_A(v->idxs, i));
-      kv_push(uint8_t, z->vals, kv_A(v->vals, i));
-    }
-    i++;
-  }
-
-  while (j < n) {
-    if (kv_A(w->vals, j) > 0) {
-      kv_push(uint16_t, z->idxs, kv_A(w->idxs, j));
-      kv_push(uint8_t, z->vals, kv_A(w->vals, j));
-    }
-    j++;
-  }
-
-  uint16_t *idxs = v->idxs.a;
-  uint8_t *vals = v->vals.a;
-  v->idxs.a = z->idxs.a;
-  v->idxs.m = z->idxs.m;
-  v->idxs.n = z->idxs.n;
-
-  v->vals.a = z->vals.a;
-  v->vals.m = z->vals.m;
-  v->vals.n = z->vals.n;
-
-  free(idxs);
-  free(vals);
 }
 
 void sv_scal(sparsevec *v, uint16_t k, uint8_t u) {
@@ -272,34 +133,6 @@ void sv_scal(sparsevec *v, uint16_t k, uint8_t u) {
   }
 }
 
-void sv_nnz(sparsevec *v, uint16_t s, uint16_t e, int *nnz, int *ones,
-            int ones_at[]) {
-  int sidx, eidx;
-
-  *nnz = 0;
-  *ones = 0;
-  ones_at[0] = 0;
-  ones_at[1] = 0;
-
-  sidx = binsearch(v->idxs.a, 0, kv_size(v->idxs) - 1, s);
-  eidx = binsearch(v->idxs.a, 0, kv_size(v->idxs) - 1, e);
-  if (kv_size(v->idxs) > eidx && kv_A(v->idxs, eidx) == e) {
-    eidx++;
-  }
-
-  for (int idx = sidx; idx < eidx; idx++) {
-    if (kv_A(v->vals, idx) != 0) {
-      *nnz += 1;
-      if (kv_A(v->vals, idx) == 1) {
-        *ones += 1;
-        if (*ones <= 2) {
-          ones_at[*ones - 1] = kv_A(v->idxs, idx) - s;
-        }
-      }
-    }
-  }
-}
-
 sparsemat sm_new(uint16_t rows, uint16_t cols) {
   sparsemat a = {0};
   a.rows = rows;
@@ -311,7 +144,7 @@ sparsemat sm_new(uint16_t rows, uint16_t cols) {
   a.cl2a = calloc(cols, sizeof(uint16_t));
 
   for (int i = 0; i < rows; i++) {
-    a.r[i] = sv_new(1); // FIXME
+    a.r[i] = sv_new(cols / 4); // FIXME
     a.ra2l[i] = i;
     a.rl2a[i] = i;
   }
@@ -371,13 +204,7 @@ void sm_set(sparsemat *a, uint16_t i, uint16_t j, uint8_t val) {
 void sm_axpy(sparsemat *a, sparsemat *b, uint16_t i, uint16_t j, uint8_t u) {
   uint16_t ia = a->rl2a[i];
   uint16_t ja = b->rl2a[j];
-  sv_axpy(&a->r[ia], &b->r[ja], u);
-}
-
-void sm_addrow(sparsemat *a, sparsemat *b, uint16_t i, uint16_t j) {
-  uint16_t ia = a->rl2a[i];
-  uint16_t ja = b->rl2a[j];
-  sv_add(&a->r[ia], &b->r[ja]);
+  sv_axpy(&a->r[ia], &b->r[ja], u, a->cols);
 }
 
 void sm_scal(sparsemat *a, uint16_t i, uint8_t u) {
@@ -398,25 +225,20 @@ void sm_gemm(sparsemat *a, sparsemat *b, sparsemat *c) {
 
 void sm_nnz(sparsemat *a, uint16_t i, uint16_t s, uint16_t e, int *nnz,
             int *ones, int ones_at[]) {
-  uint16_t ia = a->rl2a[i];
-  sparsevec *v = &a->r[ia];
-
   *nnz = 0;
   *ones = 0;
   ones_at[0] = 0;
   ones_at[1] = 0;
 
-  for (int idx = 0; idx < kv_size(v->idxs); idx++) {
-    uint16_t j = kv_A(v->idxs, idx);
-    uint16_t ja = a->cl2a[j];
-    if (ja >= s && ja < e) {
-      if (kv_A(v->vals, idx) != 0) {
-        *nnz += 1;
-        if (kv_A(v->vals, idx) == 1) {
-          *ones += 1;
-          if (*ones <= 2) {
-            ones_at[*ones - 1] = kv_A(v->idxs, idx) - s;
-          }
+  // FIXME: optimize
+  for (int idx = s; idx < e; idx++) {
+    uint8_t val = sm_get(a, i, idx);
+    if (val != 0) {
+      *nnz += 1;
+      if (val == 1) {
+        *ones += 1;
+        if (*ones <= 2) {
+          ones_at[*ones - 1] = idx - s;
         }
       }
     }
@@ -424,16 +246,18 @@ void sm_nnz(sparsemat *a, uint16_t i, uint16_t s, uint16_t e, int *nnz,
 }
 
 void sm_densify(sparsemat *a, uint8_t *d, uint16_t cols) {
+  // FIXME: optimize
   for (int i = 0; i < a->rows; i++) {
     uint8_t *dp = d + i * cols;
-    uint16_t ia = a->rl2a[i];
-    sparsevec *v = &a->r[ia];
-    sv_densify(v, dp);
+    memset(dp, 0, cols);
+    for (int j = 0; j < cols; j++) {
+      dp[j] = sm_get(a, i, j);
+    }
   }
 }
 
 void sm_print(sparsemat *a, FILE *stream) {
-  fprintf(stream, "[%ux%u]\n", a->rows, a->cols);
+  fprintf(stream, "sparse [%ux%u]\n", a->rows, a->cols);
   fprintf(stream, "|     ");
   for (int j = 0; j < a->cols; j++) {
     fprintf(stream, "| %03d ", j);
