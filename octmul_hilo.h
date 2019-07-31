@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 static const uint8_t OCT_MUL_LO[256][16] = {
     {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
