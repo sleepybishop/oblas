@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#ifndef OCT_MUL_LO
+
 static const uint8_t OCT_MUL_LO[256][16] = {
     {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1557,3 +1559,5 @@ static const uint8_t OCT_MUL_HI[256][16] = {
         0, 75, 150, 221, 49, 122, 167, 236, 98, 41, 244, 191, 83, 24, 197, 142,
     },
 };
+
+#endif
