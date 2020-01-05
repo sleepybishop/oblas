@@ -3,9 +3,10 @@ CPPFLAGS= -D_DEFAULT_SOURCE
 #CPPFLAGS= -D_DEFAULT_SOURCE -DOBLAS_SSE
 #CPPFLAGS= -D_DEFAULT_SOURCE -DOBLAS_AVX -DOCTMAT_ALIGN=32
 
-CFLAGS  = -O3 -std=c99 -Wall -march=native -funroll-loops
+CFLAGS  = -O3 -std=c99 -Wall -march=native -funroll-loops -ftree-vectorize 
+#CFLAGS += -fopt-info-vec
 
-OBJ=oblas.o octmat.o 
+OBJ=oblas.o octmat.o gf2.o
 
 all: liboblas.a
 
