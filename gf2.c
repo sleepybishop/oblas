@@ -104,7 +104,7 @@ void gf2mat_nnz_word(gf2mat *gf2, int i, int s, int e, int *nnz,
 }
 
 void gf2mat_nnz(gf2mat *gf2, int i, int s, int e, int *nnz, int ones_at[]) {
-  if (i >= gf2->m || s < 0 || s > e || e >= gf2->n)
+  if (i >= gf2->m || s < 0 || s > e || e > gf2->n)
     return;
 
   gf2word *a = gf2->bits + i * gf2->stride;
