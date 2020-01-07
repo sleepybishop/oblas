@@ -46,6 +46,32 @@ gf2mat *gf2mat_copy(gf2mat *_gf2) {
   return gf2;
 }
 
+void gf2mat_axpy(gf2mat *gf2, int i, uint8_t *dst, int beta) {
+  gf2word *a = gf2->bits + i * gf2->stride;
+  int stride = gf2->stride;
+  for (int p = 0; p < stride; p++) {
+    gf2word tmp = a[p];
+    while (tmp > 0) {
+      int tz = __builtin_ctz(tmp);
+      tmp &= (tmp - 1);
+      dst[tz + p * gf2wsz] ^= beta;
+    }
+  }
+}
+
+void gf2mat_fill(gf2mat *gf2, int i, uint8_t *dst) {
+  gf2word *a = gf2->bits + i * gf2->stride;
+  int stride = gf2->stride;
+  for (int p = 0; p < stride; p++) {
+    gf2word tmp = a[p];
+    while (tmp > 0) {
+      int tz = __builtin_ctz(tmp);
+      tmp &= (tmp - 1);
+      dst[tz + p * gf2wsz] = 1;
+    }
+  }
+}
+
 int gf2mat_get(gf2mat *gf2, int i, int j) {
   if (i >= gf2->m || j >= gf2->n)
     return 0;
