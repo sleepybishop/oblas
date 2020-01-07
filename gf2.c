@@ -113,53 +113,49 @@ void gf2mat_and(gf2mat *gf2, int i, int j) {
   }
 }
 
-void gf2mat_nnz_word(gf2mat *gf2, int i, int s, int e, int *nnz,
-                     int ones_at[]) {
+int gf2mat_nnz(gf2mat *gf2, int i, int s, int e) {
+  if (i >= gf2->m || s < 0 || s > e || e > gf2->n)
+    return 0;
   gf2word *a = gf2->bits + i * gf2->stride;
-  int p = s / gf2wsz;
-  for (int j = s; j < e; j++) {
-    gf2word mask = 1 << (j % gf2wsz);
-    int bit = (a[p] & mask) != 0;
-    if (bit) {
-      *nnz += 1;
-      if (*nnz <= 2) {
-        ones_at[*nnz - 1] = j - s;
-      }
+  int stride = gf2->stride;
+  int nnz = 0;
+  for (int p = 0; p < stride; p++) {
+    gf2word mask = -1;
+    if (p == 0 && s % gf2wsz) {
+      mask = (-1 << (s % gf2wsz));
     }
-  }
+    if (p == e / gf2wsz && e % gf2wsz) {
+      mask &= ~(1 << (gf2wsz - 1)) >> (gf2wsz - (e % gf2wsz) - 1); 
+    }
+    gf2word tmp = a[p] & mask;
+    nnz += __builtin_popcount(tmp);
+  } 
+  return nnz;
 }
 
-void gf2mat_nnz(gf2mat *gf2, int i, int s, int e, int *nnz, int ones_at[]) {
-  if (i >= gf2->m || s < 0 || s > e || e > gf2->n)
-    return;
-
-  gf2word *a = gf2->bits + i * gf2->stride;
-
-  int align_s = (s - (s % gf2wsz));
-  if (align_s < s)
-    align_s += gf2wsz;
-  if (align_s > e)
-    align_s = e;
-  int align_e = e - (e % gf2wsz);
-  if (align_e < align_s)
-    align_e = e;
-
-  gf2mat_nnz_word(gf2, i, s, align_s, nnz, ones_at);
-  for (int l = align_s; l < align_e; l += gf2wsz) {
-    int p = l / gf2wsz;
-    int bits = __builtin_popcountll(a[p]);
-    if (*nnz <= 2) {
-      int tz = __builtin_ctz(a[p]);
-      ones_at[*nnz] = tz - s;
-      if (bits > 1 && *nnz < 2) {
-        gf2word mask = (gf2word)(-1) << (tz + 1);
-        tz = __builtin_ctz(a[p] & mask);
-        ones_at[*nnz + 1] = tz - s;
-      }
-    }
-    *nnz += bits;
+int gf2mat_ones_at(gf2mat *gf2, int i, int s, int e, int at[], int at_len) {
+  if (i >= gf2->m || s < 0 || s > e || e > gf2->n) {
+    return 0;
   }
-  gf2mat_nnz_word(gf2, i, align_e, e, nnz, ones_at);
+  gf2word *a = gf2->bits + i * gf2->stride;
+  int stride = gf2->stride;
+  int found = 0;
+  for (int p = 0; p < stride; p++) {
+    gf2word mask = -1;
+    if (p == 0 && s % gf2wsz) {
+      mask = (-1 << (s % gf2wsz));
+    }
+    if (p == e / gf2wsz && e % gf2wsz) {
+      mask &= ~(1 << (gf2wsz - 1)) >> (gf2wsz - (e % gf2wsz) - 1);
+    }
+    gf2word tmp = a[p] & mask;
+    while (tmp > 0 && found < at_len) {
+      int tz = __builtin_ctz(tmp);
+      tmp &= (tmp - 1);
+      at[found++] = tz + p * gf2wsz - (s % gf2wsz);
+    }
+  }
+  return found;
 }
 
 void gf2mat_swaprow(gf2mat *gf2, int i, int j) {

@@ -28,7 +28,9 @@ void gf2mat_set(gf2mat *gf2, int i, int j, uint8_t b);
 void gf2mat_xor(gf2mat *gf2, int i, int j);
 void gf2mat_and(gf2mat *gf2, int i, int j);
 
-void gf2mat_nnz(gf2mat *gf2, int i, int s, int e, int *nnz, int ones_at[]);
+int gf2mat_nnz(gf2mat *gf2, int i, int s, int e);
+int gf2mat_ones_at(gf2mat *gf2, int i, int s, int e, int at[], int at_len);
+
 void gf2mat_swaprow(gf2mat *gf2, int i, int j);
 void gf2mat_swapcol(gf2mat *gf2, int i, int j);
 void gf2mat_zero(gf2mat *gf2, int i);
