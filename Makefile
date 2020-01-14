@@ -1,12 +1,13 @@
 CPPFLAGS= -D_DEFAULT_SOURCE
 #CPPFLAGS= -D_DEFAULT_SOURCE -DOBLAS_NEON -mfpu=neon
 #CPPFLAGS= -D_DEFAULT_SOURCE -DOBLAS_SSE
-#CPPFLAGS= -D_DEFAULT_SOURCE -DOBLAS_AVX -DOCTMAT_ALIGN=32
+CPPFLAGS= -D_DEFAULT_SOURCE -DOBLAS_AVX -DOCTMAT_ALIGN=32
 
-CFLAGS  = -O3 -std=c99 -Wall -march=native -funroll-loops -ftree-vectorize 
+CFLAGS  = -O3 -g -std=c99 -Wall -march=native 
+CFLAGS += -funroll-loops -ftree-vectorize -fno-inline 
 #CFLAGS += -fopt-info-vec
 
-OBJ=oblas.o octmat.o gf2.o
+OBJ=oblas.o octmat.o wrkmat.o
 
 all: liboblas.a
 
