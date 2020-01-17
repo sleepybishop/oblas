@@ -7,14 +7,17 @@
 #define gf2word uint32_t
 #define gf2wsz (sizeof(gf2word) * 8)
 
+#define gf2_at(g, i, j)                                                        \
+  (!!((g->bits + i * g->stride)[j / gf2wsz] & (1 << (j % gf2wsz))))
+
 typedef struct {
-  int m;
-  int n;
+  int rows;
+  int cols;
   int stride;
   gf2word *bits;
 } gf2mat;
 
-gf2mat *gf2mat_new(int m, int n);
+gf2mat *gf2mat_new(int rows, int cols);
 void gf2mat_free(gf2mat *gf2);
 void gf2mat_print(gf2mat *gf2, FILE *stream);
 gf2mat *gf2mat_copy(gf2mat *gf2);
@@ -29,7 +32,6 @@ void gf2mat_xor(gf2mat *gf2, int i, int j);
 void gf2mat_and(gf2mat *gf2, int i, int j);
 
 int gf2mat_nnz(gf2mat *gf2, int i, int s, int e);
-int gf2mat_ones_at(gf2mat *gf2, int i, int s, int e, int at[], int at_len);
 
 void gf2mat_swaprow(gf2mat *gf2, int i, int j);
 void gf2mat_swapcol(gf2mat *gf2, int i, int j);
