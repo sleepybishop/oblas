@@ -5,17 +5,17 @@
 #include "oblas.h"
 #include "octmat.h"
 
-void om_resize(octmat *v, uint16_t r, uint16_t c) {
-  v->rows = r;
-  v->cols = c;
+void om_resize(octmat *v, size_t rows, size_t cols) {
+  v->rows = rows;
+  v->cols = cols;
 
   void *aligned = NULL;
-  v->cols_al = (c / OCTMAT_ALIGN + ((c % OCTMAT_ALIGN) ? 1 : 0)) * OCTMAT_ALIGN;
+  v->cols_al = (cols / OCTMAT_ALIGN + ((cols % OCTMAT_ALIGN) ? 1 : 0)) * OCTMAT_ALIGN;
 
-  if (posix_memalign(&aligned, OCTMAT_ALIGN, r * v->cols_al) != 0) {
+  if (posix_memalign(&aligned, OCTMAT_ALIGN, rows * v->cols_al) != 0) {
     exit(ENOMEM);
   }
-  ozero(aligned, 0, v->cols_al * r);
+  ozero(aligned, 0, v->cols_al * rows);
   v->data = (uint8_t *)aligned;
 }
 

@@ -11,13 +11,13 @@
   (!!((g->bits + i * g->stride)[j / gf2wsz] & (1 << (j % gf2wsz))))
 
 typedef struct {
-  int rows;
-  int cols;
-  int stride;
+  size_t rows;
+  size_t cols;
+  size_t stride;
   gf2word *bits;
 } gf2mat;
 
-gf2mat *gf2mat_new(int rows, int cols);
+gf2mat *gf2mat_new(size_t rows, size_t cols);
 void gf2mat_free(gf2mat *gf2);
 void gf2mat_print(gf2mat *gf2, FILE *stream);
 gf2mat *gf2mat_copy(gf2mat *gf2);

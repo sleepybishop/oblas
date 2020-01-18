@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-gf2mat *gf2mat_new(int rows, int cols) {
+gf2mat *gf2mat_new(size_t rows, size_t cols) {
   gf2mat *gf2 = calloc(1, sizeof(gf2mat));
   gf2->rows = rows;
   gf2->cols = cols;
