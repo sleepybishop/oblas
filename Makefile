@@ -7,7 +7,7 @@ CFLAGS  = -O3 -g -std=c99 -Wall -march=native
 CFLAGS += -funroll-loops -ftree-vectorize -fno-inline 
 #CFLAGS += -fopt-info-vec
 
-OBJ=oblas.o octmat.o wrkmat.o
+OBJ=oblas.o octmat.o gf2.o
 
 all: liboblas.a
 
