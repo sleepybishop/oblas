@@ -98,19 +98,11 @@ void ogemm(uint8_t *restrict a, uint8_t *restrict b, uint8_t *restrict c,
   }
 }
 
-void onnz(uint8_t *a, uint16_t i, uint16_t s, uint16_t e, uint16_t k, int *nnz,
-          int *ones, int ones_idx[]) {
+int onnz(uint8_t *a, uint16_t i, uint16_t s, uint16_t e, uint16_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
-
+  int nz = 0;
   for (int idx = s; idx < e; idx++) {
-    if (ap[idx] != 0) {
-      *nnz += 1;
-      if (ap[idx] == 1) {
-        *ones += 1;
-        if (*ones <= 2) {
-          ones_idx[*ones - 1] = idx - s;
-        }
-      }
-    }
+    nz += (ap[idx] != 0);
   }
+  return nz;
 }

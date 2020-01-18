@@ -25,6 +25,6 @@ void oscal(uint8_t *a, uint16_t i, uint16_t k, uint8_t u);
 void ozero(uint8_t *restrict a, uint16_t i, size_t k);
 void ogemm(uint8_t *a, uint8_t *b, uint8_t *c, uint16_t n, uint16_t k,
            uint16_t m);
-void onnz(uint8_t *a, uint16_t i, uint16_t s, uint16_t e, uint16_t k, int *nnz,
-          int *ones, int ones_idx[]);
+int onnz(uint8_t *a, uint16_t i, uint16_t s, uint16_t e, uint16_t k);
+
 #endif
