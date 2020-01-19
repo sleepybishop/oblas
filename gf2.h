@@ -8,7 +8,7 @@
 #define gf2wsz (sizeof(gf2word) * 8)
 
 #define gf2_at(g, i, j)                                                        \
-  (!!((g->bits + i * g->stride)[j / gf2wsz] & (1 << (j % gf2wsz))))
+  (!!((g->bits + (i) * g->stride)[(j) / gf2wsz] & (1 << ((j) % gf2wsz))))
 
 typedef struct {
   size_t rows;
