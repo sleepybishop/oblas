@@ -1,9 +1,5 @@
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "oblas.h"
 #include "octmat.h"
+#include "oblas.h"
 
 void om_resize(octmat *v, size_t rows, size_t cols) {
   void *aligned = NULL;
@@ -36,7 +32,7 @@ void om_destroy(octmat *v) {
 }
 
 void om_print(octmat m, FILE *stream) {
-  fprintf(stream, "dense [%ux%u]\n", m.rows, m.cols);
+  fprintf(stream, "dense [%ux%u]\n", (unsigned)m.rows, (unsigned)m.cols);
   fprintf(stream, "|     ");
   for (int j = 0; j < m.cols; j++) {
     fprintf(stream, "| %03d ", j);

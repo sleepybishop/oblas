@@ -1,4 +1,5 @@
 #include "gf2.h"
+#include "oblas.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -19,7 +20,7 @@ void gf2mat_free(gf2mat *gf2) {
 }
 
 void gf2mat_print(gf2mat *gf2, FILE *stream) {
-  fprintf(stream, "gf2 [%ux%u]\n", gf2->rows, gf2->cols);
+  fprintf(stream, "gf2 [%ux%u]\n", (unsigned)gf2->rows, (unsigned)gf2->cols);
   fprintf(stream, "|     ");
   for (int j = 0; j < gf2->cols; j++) {
     fprintf(stream, "| %03d ", j);
