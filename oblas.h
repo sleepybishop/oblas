@@ -15,6 +15,13 @@
     (v) = __tmp;                                                               \
   } while (0)
 
+#define ALIGNED_COLS(k)                                                        \
+  (((k) / OCTMAT_ALIGN) + (((k) % OCTMAT_ALIGN) ? 1 : 0)) * OCTMAT_ALIGN
+
+typedef uint8_t octet;
+
+void *oalloc(size_t nmemb, size_t size, size_t align);
+
 void ocopy(uint8_t *a, uint8_t *b, uint16_t i, uint16_t j, uint16_t k);
 void oswaprow(uint8_t *a, uint16_t i, uint16_t j, uint16_t k);
 void oswapcol(uint8_t *a, uint16_t i, uint16_t j, uint16_t k, uint16_t l);

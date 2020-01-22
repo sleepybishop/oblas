@@ -1,8 +1,15 @@
 #include "oblas.h"
+#include <errno.h>
 
-#define ALIGNED_COLS(k)                                                        \
-  (((k) / OCTMAT_ALIGN) + (((k) % OCTMAT_ALIGN) ? 1 : 0)) * OCTMAT_ALIGN
-typedef uint8_t octet;
+void *oalloc(size_t nmemb, size_t size, size_t align) {
+  void *aligned = NULL;
+  size_t aligned_sz = ((size / align) + ((size % align) ? 1 : 0)) * align;
+
+  if (posix_memalign((void *)&aligned, align, nmemb * aligned_sz) != 0) {
+    exit(ENOMEM);
+  }
+  return aligned;
+}
 
 #ifdef OBLAS_SSE
 #include "oblas_sse.c"

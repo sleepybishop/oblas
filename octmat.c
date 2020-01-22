@@ -6,17 +6,14 @@
 #include "octmat.h"
 
 void om_resize(octmat *v, size_t rows, size_t cols) {
+  void *aligned = NULL;
+
   v->rows = rows;
   v->cols = cols;
-
-  void *aligned = NULL;
-  v->cols_al = (cols / OCTMAT_ALIGN + ((cols % OCTMAT_ALIGN) ? 1 : 0)) * OCTMAT_ALIGN;
-
-  if (posix_memalign(&aligned, OCTMAT_ALIGN, rows * v->cols_al) != 0) {
-    exit(ENOMEM);
-  }
-  ozero(aligned, 0, v->cols_al * rows);
-  v->data = (uint8_t *)aligned;
+  v->cols_al = ALIGNED_COLS(cols);
+  aligned = (uint8_t *)oalloc(v->rows, v->cols_al, OCTMAT_ALIGN);
+  memset(aligned, 0, v->cols_al * rows);
+  v->data = aligned;
 }
 
 void om_copy(octmat *v1, octmat *v0) {
@@ -25,10 +22,7 @@ void om_copy(octmat *v1, octmat *v0) {
   v1->cols_al = v0->cols_al;
 
   if (!v1->data) {
-    void *aligned = NULL;
-    if (posix_memalign(&aligned, OCTMAT_ALIGN, v0->rows * v0->cols_al) != 0)
-      exit(ENOMEM);
-    v1->data = (uint8_t *)aligned;
+    v1->data = (uint8_t *)oalloc(v0->rows, v0->cols_al, OCTMAT_ALIGN);
   }
   memcpy(v1->data, v0->data, v0->rows * v0->cols_al);
 }
