@@ -13,19 +13,19 @@ _mm256_loadu2_m128i(const __m128i *const hiaddr, const __m128i *const loaddr) {
 }
 #endif
 
-void ocopy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
-           uint16_t k) {
+void ocopy(uint8_t *restrict a, uint8_t *restrict b, size_t i, size_t j,
+           size_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = b + (j * ALIGNED_COLS(k));
 
   __m256i *ap256 = (__m256i *)ap;
   __m256i *bp256 = (__m256i *)bp;
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     _mm256_storeu_si256(ap256++, _mm256_loadu_si256(bp256++));
   }
 }
 
-void oswaprow(uint8_t *restrict a, uint16_t i, uint16_t j, uint16_t k) {
+void oswaprow(uint8_t *restrict a, size_t i, size_t j, size_t k) {
   if (i == j)
     return;
   octet *ap = a + (i * ALIGNED_COLS(k));
@@ -33,7 +33,7 @@ void oswaprow(uint8_t *restrict a, uint16_t i, uint16_t j, uint16_t k) {
 
   __m256i *ap256 = (__m256i *)ap;
   __m256i *bp256 = (__m256i *)bp;
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     __m256i atmp = _mm256_loadu_si256((__m256i *)(ap256));
     __m256i btmp = _mm256_loadu_si256((__m256i *)(bp256));
     _mm256_storeu_si256(ap256++, btmp);
@@ -41,19 +41,19 @@ void oswaprow(uint8_t *restrict a, uint16_t i, uint16_t j, uint16_t k) {
   }
 }
 
-void oswapcol(octet *restrict a, uint16_t i, uint16_t j, uint16_t k,
-              uint16_t l) {
+void oswapcol(octet *restrict a, size_t i, size_t j, size_t k,
+              size_t l) {
   if (i == j)
     return;
   octet *ap = a;
 
-  for (int idx = 0; idx < k; idx++, ap += ALIGNED_COLS(l)) {
+  for (size_t idx = 0; idx < k; idx++, ap += ALIGNED_COLS(l)) {
     OCTET_SWAP(ap[i], ap[j]);
   }
 }
 
-void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
-           uint16_t k, uint8_t u) {
+void oaxpy(uint8_t *restrict a, uint8_t *restrict b, size_t i, size_t j,
+           size_t k, uint8_t u) {
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = b + (j * ALIGNED_COLS(k));
 
@@ -71,7 +71,7 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
 
   __m256i *ap256 = (__m256i *)ap;
   __m256i *bp256 = (__m256i *)bp;
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     __m256i bx = _mm256_loadu_si256(bp256++);
     __m256i lo = _mm256_and_si256(bx, mask);
     bx = _mm256_srli_epi64(bx, 4);
@@ -85,14 +85,14 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   }
 }
 
-void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
-             uint16_t k) {
+void oaddrow(uint8_t *restrict a, uint8_t *restrict b, size_t i, size_t j,
+             size_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = b + (j * ALIGNED_COLS(k));
 
   __m256i *ap256 = (__m256i *)ap;
   __m256i *bp256 = (__m256i *)bp;
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     _mm256_storeu_si256(ap256, _mm256_xor_si256(_mm256_loadu_si256(ap256),
                                                 _mm256_loadu_si256(bp256)));
     ap256++;
@@ -100,7 +100,7 @@ void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   }
 }
 
-void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
+void oscal(uint8_t *restrict a, size_t i, size_t k, uint8_t u) {
   octet *ap = a + (i * ALIGNED_COLS(k));
 
   if (u < 2)
@@ -113,7 +113,7 @@ void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
       _mm256_loadu2_m128i((__m128i *)OCT_MUL_LO[u], (__m128i *)OCT_MUL_LO[u]);
 
   __m256i *ap256 = (__m256i *)ap;
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     __m256i ax = _mm256_loadu_si256(ap256);
     __m256i lo = _mm256_and_si256(ax, mask);
     ax = _mm256_srli_epi64(ax, 4);
@@ -125,34 +125,34 @@ void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
   }
 }
 
-void ozero(uint8_t *restrict a, uint16_t i, size_t k) {
+void ozero(uint8_t *restrict a, size_t i, size_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
   __m256i *ap256 = (__m256i *)ap;
   __m256i z256 = _mm256_setzero_si256();
 
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     _mm256_storeu_si256(ap256++, z256);
   }
 }
 
 void ogemm(uint8_t *restrict a, uint8_t *restrict b, uint8_t *restrict c,
-           uint16_t n, uint16_t k, uint16_t m) {
+           size_t n, size_t k, size_t m) {
   octet *ap, *cp = c;
 
-  for (int row = 0; row < n; row++, cp += ALIGNED_COLS(m)) {
+  for (size_t row = 0; row < n; row++, cp += ALIGNED_COLS(m)) {
     ap = a + (row * ALIGNED_COLS(k));
 
     ozero(cp, 0, m);
-    for (int idx = 0; idx < k; idx++) {
+    for (size_t idx = 0; idx < k; idx++) {
       oaxpy(cp, b, 0, idx, m, ap[idx]);
     }
   }
 }
 
-int onnz(uint8_t *a, uint16_t i, uint16_t s, uint16_t e, uint16_t k) {
+size_t onnz(uint8_t *a, size_t i, size_t s, size_t e, size_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
-  int nz = 0;
-  for (int idx = s; idx < e; idx++) {
+  size_t nz = 0;
+  for (size_t idx = s; idx < e; idx++) {
     nz += (ap[idx] != 0);
   }
   return nz;

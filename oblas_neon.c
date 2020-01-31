@@ -21,23 +21,23 @@ static uint8x16_t vqtbl1q_u8(uint8x16_t a, uint8x16_t b) {
 }
 #endif
 
-void ocopy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
-           uint16_t k) {
+void ocopy(uint8_t *restrict a, uint8_t *restrict b, size_t i, size_t j,
+           size_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = b + (j * ALIGNED_COLS(k));
 
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     vst1q_u8(ap + idx, vld1q_u8(bp + idx));
   }
 }
 
-void oswaprow(uint8_t *restrict a, uint16_t i, uint16_t j, uint16_t k) {
+void oswaprow(uint8_t *restrict a, size_t i, size_t j, size_t k) {
   if (i == j)
     return;
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = a + (j * ALIGNED_COLS(k));
 
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     uint8x16_t atmp = vld1q_u8(ap + idx);
     uint8x16_t btmp = vld1q_u8(bp + idx);
 
@@ -46,19 +46,19 @@ void oswaprow(uint8_t *restrict a, uint16_t i, uint16_t j, uint16_t k) {
   }
 }
 
-void oswapcol(octet *restrict a, uint16_t i, uint16_t j, uint16_t k,
-              uint16_t l) {
+void oswapcol(octet *restrict a, size_t i, size_t j, size_t k,
+              size_t l) {
   if (i == j)
     return;
   octet *ap = a;
 
-  for (int idx = 0; idx < k; idx++, ap += ALIGNED_COLS(l)) {
+  for (size_t idx = 0; idx < k; idx++, ap += ALIGNED_COLS(l)) {
     OCTET_SWAP(ap[i], ap[j]);
   }
 }
 
-void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
-           uint16_t k, uint8_t u) {
+void oaxpy(uint8_t *restrict a, uint8_t *restrict b, size_t i, size_t j,
+           size_t k, uint8_t u) {
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = b + (j * ALIGNED_COLS(k));
 
@@ -71,7 +71,7 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   uint8x16_t mask = vdupq_n_u8(0x0f);
   uint8x16_t urow_hi = vld1q_u8(OCT_MUL_HI[u]);
   uint8x16_t urow_lo = vld1q_u8(OCT_MUL_LO[u]);
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     uint8x16_t bx = vld1q_u8(bp + idx);
     uint8x16_t lo = vandq_u8(bx, mask);
     bx = vshrq_n_u8(bx, 4);
@@ -84,12 +84,12 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   }
 }
 
-void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
-             uint16_t k) {
+void oaddrow(uint8_t *restrict a, uint8_t *restrict b, size_t i, size_t j,
+             size_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
   octet *bp = b + (j * ALIGNED_COLS(k));
 
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     uint8x16_t ap128 = vld1q_u8(ap + idx);
     uint8x16_t bp128 = vld1q_u8(bp + idx);
 
@@ -97,7 +97,7 @@ void oaddrow(uint8_t *restrict a, uint8_t *restrict b, uint16_t i, uint16_t j,
   }
 }
 
-void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
+void oscal(uint8_t *restrict a, size_t i, size_t k, uint8_t u) {
   octet *ap = a + (i * ALIGNED_COLS(k));
 
   if (u < 2)
@@ -106,7 +106,7 @@ void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
   uint8x16_t mask = vdupq_n_u8(0x0f);
   uint8x16_t urow_hi = vld1q_u8(OCT_MUL_HI[u]);
   uint8x16_t urow_lo = vld1q_u8(OCT_MUL_LO[u]);
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     uint8x16_t ax = vld1q_u8(ap + idx);
     uint8x16_t lo = vandq_u8(ax, mask);
     ax = vshrq_n_u8(ax, 4);
@@ -117,33 +117,33 @@ void oscal(uint8_t *restrict a, uint16_t i, uint16_t k, uint8_t u) {
   }
 }
 
-void ozero(uint8_t *restrict a, uint16_t i, size_t k) {
+void ozero(uint8_t *restrict a, size_t i, size_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
 
   uint8x16_t z128 = vdupq_n_u8(0);
-  for (int idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
+  for (size_t idx = 0; idx < ALIGNED_COLS(k); idx += OCTMAT_ALIGN) {
     vst1q_u8(ap + idx, z128);
   }
 }
 
 void ogemm(uint8_t *restrict a, uint8_t *restrict b, uint8_t *restrict c,
-           uint16_t n, uint16_t k, uint16_t m) {
+           size_t n, size_t k, size_t m) {
   octet *ap, *cp = c;
 
-  for (int row = 0; row < n; row++, cp += ALIGNED_COLS(m)) {
+  for (size_t row = 0; row < n; row++, cp += ALIGNED_COLS(m)) {
     ap = a + (row * ALIGNED_COLS(k));
 
     ozero(cp, 0, m);
-    for (int idx = 0; idx < k; idx++) {
+    for (size_t idx = 0; idx < k; idx++) {
       oaxpy(cp, b, 0, idx, m, ap[idx]);
     }
   }
 }
 
-int onnz(uint8_t *a, uint16_t i, uint16_t s, uint16_t e, uint16_t k) {
+size_t onnz(uint8_t *a, size_t i, size_t s, size_t e, size_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
-  int nz = 0;
-  for (int idx = s; idx < e; idx++) {
+  size_t nz = 0;
+  for (size_t idx = s; idx < e; idx++) {
     nz += (ap[idx] != 0);
   }
   return nz;

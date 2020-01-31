@@ -22,16 +22,16 @@ typedef uint8_t octet;
 
 void *oalloc(size_t nmemb, size_t size, size_t align);
 
-void ocopy(uint8_t *a, uint8_t *b, uint16_t i, uint16_t j, uint16_t k);
-void oswaprow(uint8_t *a, uint16_t i, uint16_t j, uint16_t k);
-void oswapcol(uint8_t *a, uint16_t i, uint16_t j, uint16_t k, uint16_t l);
-void oaxpy(uint8_t *a, uint8_t *b, uint16_t i, uint16_t j, uint16_t k,
+void ocopy(uint8_t *a, uint8_t *b, size_t i, size_t j, size_t k);
+void oswaprow(uint8_t *a, size_t i, size_t j, size_t k);
+void oswapcol(uint8_t *a, size_t i, size_t j, size_t k, size_t l);
+void oaxpy(uint8_t *a, uint8_t *b, size_t i, size_t j, size_t k,
            uint8_t u);
-void oaddrow(uint8_t *a, uint8_t *b, uint16_t i, uint16_t j, uint16_t k);
-void oscal(uint8_t *a, uint16_t i, uint16_t k, uint8_t u);
-void ozero(uint8_t *restrict a, uint16_t i, size_t k);
-void ogemm(uint8_t *a, uint8_t *b, uint8_t *c, uint16_t n, uint16_t k,
-           uint16_t m);
-int onnz(uint8_t *a, uint16_t i, uint16_t s, uint16_t e, uint16_t k);
+void oaddrow(uint8_t *a, uint8_t *b, size_t i, size_t j, size_t k);
+void oscal(uint8_t *a, size_t i, size_t k, uint8_t u);
+void ozero(uint8_t *restrict a, size_t i, size_t k);
+void ogemm(uint8_t *a, uint8_t *b, uint8_t *c, size_t n, size_t k,
+           size_t m);
+size_t onnz(uint8_t *a, size_t i, size_t s, size_t e, size_t k);
 
 #endif
