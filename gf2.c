@@ -1,5 +1,4 @@
 #include "gf2.h"
-#include "oblas.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -96,21 +95,21 @@ void gf2mat_set(gf2mat *gf2, int i, int j, uint8_t b) {
   a[p.quot] = (b) ? (a[p.quot] | mask) : (a[p.quot] & ~mask);
 }
 
-void gf2mat_xor(gf2mat *gf2, int i, int j) {
-  gf2word *a = gf2->bits + i * gf2->stride;
-  gf2word *b = gf2->bits + j * gf2->stride;
-  int stride = gf2->stride;
-  for (int p = 0; p < stride; p++) {
-    a[p] ^= b[p];
+void gf2mat_xor(gf2mat *a, gf2mat *b, int i, int j) {
+  gf2word *ap = a->bits + i * a->stride;
+  gf2word *bp = b->bits + j * b->stride;
+  int stride = a->stride;
+  for (int idx = 0; idx < stride; idx++) {
+    ap[idx] ^= bp[idx];
   }
 }
 
-void gf2mat_and(gf2mat *gf2, int i, int j) {
-  gf2word *a = gf2->bits + i * gf2->stride;
-  gf2word *b = gf2->bits + j * gf2->stride;
-  int stride = gf2->stride;
-  for (int p = 0; p < stride; p++) {
-    a[p] &= b[p];
+void gf2mat_and(gf2mat *a, gf2mat *b, int i, int j) {
+  gf2word *ap = a->bits + i * a->stride;
+  gf2word *bp = b->bits + j * b->stride;
+  int stride = a->stride;
+  for (int idx = 0; idx < stride; idx++) {
+    ap[idx] &= bp[idx];
   }
 }
 

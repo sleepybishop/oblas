@@ -28,8 +28,8 @@ void gf2mat_fill(gf2mat *gf2, int i, uint8_t *dst);
 int gf2mat_get(gf2mat *gf2, int i, int j);
 void gf2mat_set(gf2mat *gf2, int i, int j, uint8_t b);
 
-void gf2mat_xor(gf2mat *gf2, int i, int j);
-void gf2mat_and(gf2mat *gf2, int i, int j);
+void gf2mat_xor(gf2mat *a, gf2mat *b, int i, int j);
+void gf2mat_and(gf2mat *a, gf2mat *b, int i, int j);
 
 int gf2mat_nnz(gf2mat *gf2, int i, int s, int e);
 
