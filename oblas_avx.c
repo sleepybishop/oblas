@@ -41,8 +41,7 @@ void oswaprow(uint8_t *restrict a, size_t i, size_t j, size_t k) {
   }
 }
 
-void oswapcol(octet *restrict a, size_t i, size_t j, size_t k,
-              size_t l) {
+void oswapcol(octet *restrict a, size_t i, size_t j, size_t k, size_t l) {
   if (i == j)
     return;
   octet *ap = a;
