@@ -156,3 +156,26 @@ size_t onnz(uint8_t *a, size_t i, size_t s, size_t e, size_t k) {
   }
   return nz;
 }
+
+void oaxpy_b32(uint8_t *a, uint32_t *b, size_t i, size_t k, uint8_t u) {
+  __m256i *ap256 = (__m256i *)(a + i * ALIGNED_COLS(k));
+  __m256i scatter =
+      _mm256_set_epi32(0x03030303, 0x03030303, 0x02020202, 0x02020202,
+                       0x01010101, 0x01010101, 0x00000000, 0x00000000);
+  __m256i cmpmask =
+      _mm256_set_epi32(0x80402010, 0x08040201, 0x80402010, 0x08040201,
+                       0x80402010, 0x08040201, 0x80402010, 0x08040201);
+  __m256i u256 = _mm256_set1_epi8(u);
+
+  for (size_t idx = 0, p = 0; idx < k;
+       idx += 8 * sizeof(uint32_t), p++, ap256++) {
+    __m256i bcast = _mm256_set1_epi32(b[p]);
+    __m256i bytes = _mm256_shuffle_epi8(bcast, scatter);
+
+    bytes = _mm256_andnot_si256(bytes, cmpmask);
+    bytes = _mm256_and_si256(_mm256_cmpeq_epi8(bytes, _mm256_setzero_si256()),
+                             u256);
+    _mm256_storeu_si256(ap256,
+                        _mm256_xor_si256(_mm256_loadu_si256(ap256), bytes));
+  }
+}

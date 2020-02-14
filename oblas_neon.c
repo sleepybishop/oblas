@@ -147,3 +147,15 @@ size_t onnz(uint8_t *a, size_t i, size_t s, size_t e, size_t k) {
   }
   return nz;
 }
+
+void oaxpy_b32(uint8_t *a, uint32_t *b, size_t i, size_t k, uint8_t u) {
+  octet *ap = a + (i * ALIGNED_COLS(k));
+  for (size_t idx = 0, p = 0; idx < k; idx += 8 * sizeof(uint32_t), p++) {
+    uint32_t tmp = b[p];
+    while (tmp > 0) {
+      int tz = __builtin_ctz(tmp);
+      tmp = tmp & (tmp - 1);
+      ap[tz + idx] ^= u;
+    }
+  }
+}

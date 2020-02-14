@@ -31,5 +31,6 @@ void oscal(uint8_t *a, size_t i, size_t k, uint8_t u);
 void ozero(uint8_t *restrict a, size_t i, size_t k);
 void ogemm(uint8_t *a, uint8_t *b, uint8_t *c, size_t n, size_t k, size_t m);
 size_t onnz(uint8_t *a, size_t i, size_t s, size_t e, size_t k);
+void oaxpy_b32(uint8_t *a, uint32_t *b, size_t i, size_t k, uint8_t u);
 
 #endif
