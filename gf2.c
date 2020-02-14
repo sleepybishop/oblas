@@ -53,7 +53,7 @@ void gf2mat_axpy(gf2mat *gf2, int i, uint8_t *dst, int beta) {
     gf2word tmp = a[p];
     while (tmp > 0) {
       int tz = __builtin_ctz(tmp);
-      tmp &= (tmp - 1);
+      tmp = tmp & (tmp - 1);
       dst[tz + p * gf2wsz] ^= beta;
     }
   }
@@ -66,7 +66,7 @@ void gf2mat_fill(gf2mat *gf2, int i, uint8_t *dst) {
     gf2word tmp = a[p];
     while (tmp > 0) {
       int tz = __builtin_ctz(tmp);
-      tmp &= (tmp - 1);
+      tmp = tmp & (tmp - 1);
       dst[tz + p * gf2wsz] = 1;
     }
   }
