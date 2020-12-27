@@ -1,8 +1,14 @@
 # oblas
 
-these implement just enough blas-like routines to implement a solver over a finite field of octets.
+blas-like routines to solve systems in finite fields [gf2, gf256]
 
-gradually optimizing for different archs. (eg. SSE, AVX, NEON)
+The table generator `tablegen.c` also supports [gf4, gf16] but routines to work with packed vectors in those fields is incomplete.
 
-references:
-https://www.ssrc.ucsc.edu/Papers/plank-fast13.pdf
+#### Optimizing for different archs
+ - NEON: `make CPPFLAGS+="-DOBLAS_NEON"`
+ - SSE: `make CPPFLAGS+="-DOBLAS_SSE"`
+ - AVX: `make CPPFLAGS+="-DOBLAS_AVX -DOCTMAT_ALIGN=32"`
+
+#### Customizing
+Edit `tablegen.c` to change polynomial/field size.
+

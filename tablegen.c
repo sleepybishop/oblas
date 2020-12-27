@@ -2,69 +2,91 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static uint8_t prim[] = "101110001";
-/* 1 + x^2 + x^3 + x^4 + x^8 */
+enum { GF_2_2 = 0, GF_2_4 = 1, GF_2_8 = 2 };
 
-static uint8_t OCT_EXP[UINT8_MAX];
-static uint8_t OCT_LOG[UINT8_MAX + 1];
+enum {
+  POLY_GF_2_2 = 7,   /*                      x^2 + x + 1 */
+  POLY_GF_2_4 = 19,  /*          x^4             + x + 1 */
+  POLY_GF_2_8 = 285, /* x^8    + x^4 + x^3 + x^2     + 1 */
+};
 
-int main(int argc, char *argv[]) {
+typedef struct {
+  uint8_t field;
+  uint8_t exp;
+  unsigned len;
+  unsigned poly;
+} gf;
 
-  OCT_LOG[8] = 0;
+typedef struct {
+  uint8_t EXP[UINT8_MAX];
+  uint8_t LOG[UINT8_MAX + 1];
+} gftbl;
 
+static gf fields[] = {
+    {.field = GF_2_2, .exp = 2, .len = 4, .poly = POLY_GF_2_2},
+    {.field = GF_2_4, .exp = 4, .len = 16, .poly = POLY_GF_2_4},
+    {.field = GF_2_8, .exp = 8, .len = 256, .poly = POLY_GF_2_8},
+};
+
+void fill_tabs(gf field, gftbl *tabs) {
   uint8_t o = 1;
-  for (int i = 0; i < 8; i++, o <<= 1) {
-    OCT_EXP[i] = o;
-
-    OCT_LOG[OCT_EXP[i]] = i;
-
-    if (prim[i] == '1')
-      OCT_EXP[8] |= o;
+  for (int i = 0; i < field.exp; i++, o <<= 1) {
+    tabs->EXP[i] = o;
+    tabs->EXP[field.exp] |= field.poly & (1 << i);
   }
-  OCT_LOG[OCT_EXP[8]] = 8;
 
-  o = 1 << 7;
-  for (int i = 9; i < UINT8_MAX; i++) {
-    if (OCT_EXP[i - 1] >= o)
-      OCT_EXP[i] = OCT_EXP[8] ^ ((OCT_EXP[i - 1]) << 1);
+  o = 1 << (field.exp - 1);
+  for (int i = (field.exp + 1); i < (field.len - 1); i++) {
+    if (tabs->EXP[i - 1] >= o)
+      tabs->EXP[i] = tabs->EXP[field.exp] ^ ((tabs->EXP[i - 1]) << 1);
     else
-      OCT_EXP[i] = OCT_EXP[i - 1] << 1;
+      tabs->EXP[i] = tabs->EXP[i - 1] << 1;
+    tabs->EXP[i] = tabs->EXP[i] % field.len;
+  }
 
-    OCT_LOG[OCT_EXP[i]] = i;
-  }
-  OCT_LOG[0] = UINT8_MAX;
+  /* invert exp table */
+  tabs->LOG[0] = field.len - 1;
+  for (int i = 0; i < (field.len - 1); i++)
+    tabs->LOG[tabs->EXP[i]] = i;
+}
 
-  fprintf(stdout, "static const uint8_t OCT_LOG[] = {");
-  for (int i = 0; i <= UINT8_MAX; i++) {
-    fprintf(stdout, "%d,%c", OCT_LOG[i], (i % 16) ? ' ' : '\n');
-  }
-  fprintf(stdout, "};\n\n");
+void print_tabs(FILE *stream, gf field, gftbl *tabs) {
+  fprintf(stream, "#ifndef OCT_TABLES\n#define OCT_TABLES\n\n");
+  fprintf(stream, "static const uint8_t OCT_LOG[] = {");
+  for (int i = 0; i < field.len; i++)
+    fprintf(stream, "%d,", tabs->LOG[i]);
+  fprintf(stream, "};\n\n");
 
-  fprintf(stdout, "static const uint8_t OCT_EXP[] = {\n");
-  for (int i = 0; i < UINT8_MAX; i++) {
-    fprintf(stdout, "%d,%c", OCT_EXP[i], (i % 16) ? ' ' : '\n');
-  }
-  /* exp table is repeated to avoid modulo ops on div/mul */
-  for (int i = 0; i < UINT8_MAX; i++) {
-    fprintf(stdout, "%d,%c", OCT_EXP[i], (i % 16) ? ' ' : '\n');
-  }
-  fprintf(stdout, "};\n\n");
-  fprintf(stdout, "static const uint16_t OCT_EXP_SIZE = sizeof(OCT_EXP) / "
+  fprintf(stream, "static const uint8_t OCT_EXP[] = {\n");
+  for (int i = 0; i < 2 * (field.len - 1); i++)
+    fprintf(stream, "%d,", tabs->EXP[i % (field.len - 1)]);
+
+  fprintf(stream, "};\n\n");
+  fprintf(stream, "static const uint16_t OCT_EXP_SIZE = sizeof(OCT_EXP) / "
                   "sizeof(OCT_EXP[0]);\n\n");
 
-  fprintf(stdout, "static const uint8_t OCT_MUL[256][256] = {");
-  for (int i = 0; i <= UINT8_MAX; i++) {
-    fprintf(stdout, "\n{");
-    for (int j = 0; j <= UINT8_MAX; j++) {
-      if (i == 0 || j == 0) {
-        fprintf(stdout, "%d,", 0);
-      } else {
-        fprintf(stdout, "%d,", OCT_EXP[(OCT_LOG[i] + OCT_LOG[j]) % 255]);
-      }
+  fprintf(stream, "static const uint8_t OCT_INV[] = {");
+  for (int i = 0; i < field.len; i++) {
+    switch (i) {
+    case 0:
+      fprintf(stream, "%d,", 0);
+      break;
+    case 1:
+      fprintf(stream, "%d,", 1);
+      break;
+    default:
+      fprintf(stream, "%d,", tabs->EXP[tabs->LOG[0] - tabs->LOG[i]]);
     }
-
-    fprintf(stdout, "},\n");
   }
-  fprintf(stdout, "};\n\n");
+  fprintf(stream, "};\n\n");
+
+  fprintf(stream, "\n\n");
+  fprintf(stream, "#endif\n");
+}
+
+int main(int argc, char *argv[]) {
+  gftbl tabs;
+  fill_tabs(fields[GF_2_8], &tabs);
+  print_tabs(stdout, fields[GF_2_8], &tabs);
   return 0;
 }
