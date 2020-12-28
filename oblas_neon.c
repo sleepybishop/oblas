@@ -1,7 +1,6 @@
 #include <arm_neon.h>
 
 #include "oblas.h"
-#include "octmul_hilo.h"
 
 /*
  * AArch32 does not provide this intrinsic natively because it does not

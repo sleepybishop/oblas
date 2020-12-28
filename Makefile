@@ -10,7 +10,6 @@ tablegen: tablegen.c
 
 octtables.h: tablegen
 	./$< > $@
-	clang-format -style=LLVM -i $@
 
 oblas.o: oblas.c oblas.h octtables.h
 
@@ -19,7 +18,7 @@ liboblas.a: $(OBJ)
 
 .PHONY: clean indent scan
 clean:
-	$(RM) *.o *.a
+	$(RM) *.o *.a tablegen
 
 indent:
 	clang-format -style=LLVM -i *.c *.h

@@ -1,7 +1,6 @@
 #include <immintrin.h> /* AVX */
 
 #include "oblas.h"
-#include "octmul_hilo.h"
 
 /* GCC doesn't include some intrinsics */
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC)
