@@ -2,16 +2,6 @@
 
 #include "oblas.h"
 
-/* GCC doesn't include some intrinsics */
-#if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC)
-static inline __m256i __attribute__((__always_inline__))
-_mm256_loadu2_m128i(const __m128i *const hiaddr, const __m128i *const loaddr) {
-  return _mm256_inserti128_si256(
-      _mm256_castsi128_si256(_mm_loadu_si128(loaddr)), _mm_loadu_si128(hiaddr),
-      1);
-}
-#endif
-
 void ocopy(uint8_t *restrict a, uint8_t *restrict b, size_t i, size_t j,
            size_t k) {
   octet *ap = a + (i * ALIGNED_COLS(k));
