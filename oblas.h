@@ -20,11 +20,6 @@
 
 typedef uint8_t octet;
 
-void *oblas_alloc(size_t nmemb, size_t size, size_t align);
-void oblas_free(void *ptr);
-uint32_t bfd_32(uint32_t word, uint8_t at, uint8_t len, unsigned val);
-uint32_t bfx_32(uint32_t word, uint8_t at, uint8_t len);
-
 void ocopy(uint8_t *a, uint8_t *b, size_t i, size_t j, size_t k);
 void oswaprow(uint8_t *a, size_t i, size_t j, size_t k);
 void oswapcol(uint8_t *a, size_t i, size_t j, size_t k, size_t l);
