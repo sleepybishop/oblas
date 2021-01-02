@@ -7,7 +7,7 @@ void om_resize(octmat *v, size_t rows, size_t cols) {
   v->rows = rows;
   v->cols = cols;
   v->cols_al = ALIGNED_COLS(cols);
-  aligned = (uint8_t *)oalloc(v->rows, v->cols_al, OCTMAT_ALIGN);
+  aligned = (uint8_t *)oblas_alloc(v->rows, v->cols_al, OCTMAT_ALIGN);
   memset(aligned, 0, v->cols_al * rows);
   v->data = aligned;
 }
@@ -18,7 +18,7 @@ void om_copy(octmat *v1, octmat *v0) {
   v1->cols_al = v0->cols_al;
 
   if (!v1->data) {
-    v1->data = (uint8_t *)oalloc(v0->rows, v0->cols_al, OCTMAT_ALIGN);
+    v1->data = (uint8_t *)oblas_alloc(v0->rows, v0->cols_al, OCTMAT_ALIGN);
   }
   memcpy(v1->data, v0->data, v0->rows * v0->cols_al);
 }
@@ -27,7 +27,7 @@ void om_destroy(octmat *v) {
   v->rows = 0;
   v->cols = 0;
   v->cols_al = 0;
-  free(v->data);
+  oblas_free(v->data);
   v->data = NULL;
 }
 

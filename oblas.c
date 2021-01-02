@@ -1,7 +1,7 @@
 #include "oblas.h"
 #include <errno.h>
 
-void *oalloc(size_t nmemb, size_t size, size_t align) {
+void *oblas_alloc(size_t nmemb, size_t size, size_t align) {
   void *aligned = NULL;
   size_t aligned_sz = ((size / align) + ((size % align) ? 1 : 0)) * align;
 
@@ -9,6 +9,20 @@ void *oalloc(size_t nmemb, size_t size, size_t align) {
     exit(ENOMEM);
   }
   return aligned;
+}
+
+void oblas_free(void *ptr) {
+  free(ptr);
+}
+
+uint32_t bfd_32(uint32_t word, uint8_t at, uint8_t len, unsigned val) {
+  uint32_t mask = ((1 << len) - 1) << at;
+  return (word & ~mask) | (val << at);
+}
+
+uint32_t bfx_32(uint32_t word, uint8_t at, uint8_t len) {
+  uint32_t mask = ((1 << len) - 1) << at;
+  return (word & mask) >> at;
 }
 
 #ifdef OBLAS_SSE
