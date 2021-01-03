@@ -2,7 +2,7 @@ CFLAGS  = -D_DEFAULT_SOURCE -O3 -g -std=c99 -Wall -march=native
 CFLAGS += -funroll-loops -ftree-vectorize -fno-inline 
 #CFLAGS += -fopt-info-vec
 
-OBJ=oblas.o octmat.o gf2.o
+OBJ=oblas.o util.o octmat.o gf2.o gf4.o
 
 all: liboblas.a
 
@@ -18,7 +18,7 @@ liboblas.a: $(OBJ)
 
 .PHONY: clean indent scan
 clean:
-	$(RM) *.o *.a tablegen
+	$(RM) *.o *.a tablegen 
 
 indent:
 	clang-format -style=LLVM -i *.c *.h
