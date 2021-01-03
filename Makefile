@@ -2,7 +2,7 @@ CFLAGS  = -D_DEFAULT_SOURCE -O3 -g -std=c99 -Wall -march=native
 CFLAGS += -funroll-loops -ftree-vectorize -fno-inline 
 #CFLAGS += -fopt-info-vec
 
-OBJ=oblas.o util.o octmat.o gf2.o gf4.o
+OBJ=oblas.o util.o octmat.o gf2.o gf4.o gf16.o
 
 all: liboblas.a
 
