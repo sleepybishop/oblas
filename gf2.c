@@ -49,19 +49,6 @@ gf2mat *gf2mat_copy(gf2mat *_gf2) {
   return gf2;
 }
 
-void gf2mat_fill(gf2mat *gf2, int i, uint8_t *dst) {
-  gf2word *a = gf2->bits + i * gf2->stride;
-  unsigned stride = gf2->stride;
-  for (int idx = 0; idx < stride; idx++) {
-    gf2word tmp = a[idx];
-    while (tmp > 0) {
-      unsigned tz = __builtin_ctz(tmp);
-      tmp = tmp & (tmp - 1);
-      dst[tz + idx * gf2wsz] = 1;
-    }
-  }
-}
-
 int gf2mat_get(gf2mat *gf2, int i, int j) {
   if (i >= gf2->rows || j >= gf2->cols)
     return 0;
@@ -117,6 +104,19 @@ int gf2mat_nnz(gf2mat *gf2, int i, int s, int e) {
     nnz += __builtin_popcount(a[p] & masks[1]);
   }
   return nnz;
+}
+
+void gf2mat_fill(gf2mat *gf2, int i, uint8_t *dst) {
+  gf2word *a = gf2->bits + i * gf2->stride;
+  unsigned stride = gf2->stride;
+  for (int idx = 0; idx < stride; idx++) {
+    gf2word tmp = a[idx];
+    while (tmp > 0) {
+      unsigned tz = __builtin_ctz(tmp);
+      tmp = tmp & (tmp - 1);
+      dst[tz + idx * gf2wsz] = 1;
+    }
+  }
 }
 
 void gf2mat_swaprow(gf2mat *gf2, int i, int j) {

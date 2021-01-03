@@ -22,9 +22,6 @@ void gf2mat_free(gf2mat *gf2);
 void gf2mat_print(gf2mat *gf2, FILE *stream);
 gf2mat *gf2mat_copy(gf2mat *gf2);
 
-void gf2mat_axpy(gf2mat *gf2, int i, uint8_t *dst, int beta);
-void gf2mat_fill(gf2mat *gf2, int i, uint8_t *dst);
-
 int gf2mat_get(gf2mat *gf2, int i, int j);
 void gf2mat_set(gf2mat *gf2, int i, int j, uint8_t b);
 
@@ -32,6 +29,7 @@ void gf2mat_xor(gf2mat *a, gf2mat *b, int i, int j);
 void gf2mat_and(gf2mat *a, gf2mat *b, int i, int j);
 
 int gf2mat_nnz(gf2mat *gf2, int i, int s, int e);
+void gf2mat_fill(gf2mat *gf2, int i, uint8_t *dst);
 
 void gf2mat_swaprow(gf2mat *gf2, int i, int j);
 void gf2mat_swapcol(gf2mat *gf2, int i, int j);

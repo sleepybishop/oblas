@@ -48,20 +48,6 @@ gf4mat *gf4mat_copy(gf4mat *_gf4) {
   return gf4;
 }
 
-void gf4mat_fill(gf4mat *gf4, int i, uint8_t *dst) {
-  gf4word *a = gf4->bits + i * gf4->stride;
-  unsigned stride = gf4->stride;
-  for (int idx = 0; idx < stride; idx++) {
-    gf4word tmp = a[idx];
-    while (tmp > 0) {
-      unsigned tz = __builtin_ctz(tmp);
-      div_t q = div(tz, 2);
-      tmp = tmp & (tmp - 1);
-      dst[q.quot + idx * gf4bpw] |= (q.rem + 1);
-    }
-  }
-}
-
 int gf4mat_get(gf4mat *gf4, int i, int j) {
   if (i >= gf4->rows || j >= gf4->cols)
     return 0;
@@ -132,6 +118,20 @@ int gf4mat_nnz(gf4mat *gf4, int i, int s, int e) {
     nnz += __builtin_popcount(z & mask);
   }
   return nnz;
+}
+
+void gf4mat_fill(gf4mat *gf4, int i, uint8_t *dst) {
+  gf4word *a = gf4->bits + i * gf4->stride;
+  unsigned stride = gf4->stride;
+  for (int idx = 0; idx < stride; idx++) {
+    gf4word tmp = a[idx];
+    while (tmp > 0) {
+      unsigned tz = __builtin_ctz(tmp);
+      div_t q = div(tz, 2);
+      tmp = tmp & (tmp - 1);
+      dst[q.quot + idx * gf4bpw] |= (q.rem + 1);
+    }
+  }
 }
 
 void gf4mat_swaprow(gf4mat *gf4, int i, int j) {

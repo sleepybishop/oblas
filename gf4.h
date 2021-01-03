@@ -20,9 +20,6 @@ void gf4mat_free(gf4mat *gf4);
 void gf4mat_print(gf4mat *gf4, FILE *stream);
 gf4mat *gf4mat_copy(gf4mat *gf4);
 
-void gf4mat_axpy(gf4mat *gf4, int i, uint8_t *dst, int beta);
-void gf4mat_fill(gf4mat *gf4, int i, uint8_t *dst);
-
 int gf4mat_get(gf4mat *gf4, int i, int j);
 void gf4mat_set(gf4mat *gf4, int i, int j, uint8_t b);
 
@@ -31,6 +28,7 @@ void gf4mat_mul(gf4mat *a, gf4mat *b, int i, int j);
 void gf4mat_scal(gf4mat *a, int i, int u);
 
 int gf4mat_nnz(gf4mat *gf4, int i, int s, int e);
+void gf4mat_fill(gf4mat *gf4, int i, uint8_t *dst);
 
 void gf4mat_swaprow(gf4mat *gf4, int i, int j);
 void gf4mat_swapcol(gf4mat *gf4, int i, int j);
