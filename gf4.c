@@ -82,10 +82,6 @@ void gf4mat_mul(gf4mat *a, gf4mat *b, int i, int j) {
   for (int idx = 0; idx < stride; idx++) {
     /*TODO*/
   }
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
-    }
-  }
 }
 
 void gf4mat_scal(gf4mat *a, int i, int u) {
@@ -97,14 +93,14 @@ void gf4mat_scal(gf4mat *a, int i, int u) {
 }
 
 int gf4mat_nnz(gf4mat *gf4, int i, int s, int e) {
-  if (i >= gf4->rows || s < 0 || s > e || e > gf4->cols)
+  if (i >= gf4->rows || s < 0 || s > e || e > (gf4->cols + 1))
     return 0;
   gf4word *a = gf4->bits + i * gf4->stride;
   unsigned nnz = 0;
-  div_t sd = div(s, gf4wsz), ed = div(e, gf4wsz);
+  div_t sd = div(s, gf4bpw), ed = div(e, gf4bpw);
   gf4word masks[2] = {~((1 << sd.rem) - 1), ((1 << ed.rem) - 1)};
 
-  for (int idx = sd.quot; idx <= (ed.quot + 1); idx++) {
+  for (int idx = sd.quot; idx <= ed.quot; idx++) {
     gf4word tmp = a[idx], z = 0, mask = -1;
     while (tmp > 0) {
       unsigned tz = __builtin_ctz(tmp) >> 1;
@@ -113,7 +109,7 @@ int gf4mat_nnz(gf4mat *gf4, int i, int s, int e) {
     }
     if (sd.rem && idx == sd.quot)
       mask = masks[0];
-    else if (e > ed.quot && idx == ed.quot + 1)
+    else if (e > ed.quot && idx == ed.quot)
       mask = masks[1];
     nnz += __builtin_popcount(z & mask);
   }
@@ -129,7 +125,7 @@ void gf4mat_fill(gf4mat *gf4, int i, uint8_t *dst) {
       unsigned tz = __builtin_ctz(tmp);
       div_t q = div(tz, 2);
       tmp = tmp & (tmp - 1);
-      dst[q.quot + idx * gf4bpw] |= (q.rem + 1);
+      dst[q.quot + idx * gf4bpw] |= 1 << q.rem;
     }
   }
 }
@@ -156,8 +152,8 @@ void gf4mat_swapcol(gf4mat *gf4, int i, int j) {
   unsigned stride = gf4->stride;
   unsigned p = i / gf4bpw;
   unsigned q = j / gf4bpw;
-  unsigned p_at = ((i % gf4bpw) - 1) << 1;
-  unsigned q_at = ((j % gf4bpw) - 1) << 1;
+  unsigned p_at = (i % gf4bpw) << 1;
+  unsigned q_at = (j % gf4bpw) << 1;
   unsigned m = gf4->rows;
   for (int r = 0; r < m; r++, p += stride, q += stride) {
     uint8_t ival = bfx_32(a[p], p_at, 2);

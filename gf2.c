@@ -86,7 +86,7 @@ void gf2mat_and(gf2mat *a, gf2mat *b, int i, int j) {
 }
 
 int gf2mat_nnz(gf2mat *gf2, int i, int s, int e) {
-  if (i >= gf2->rows || s < 0 || s > e || e > gf2->cols)
+  if (i >= gf2->rows || s < 0 || s > e || e > (gf2->cols + 1))
     return 0;
   gf2word *a = gf2->bits + i * gf2->stride;
   div_t sd = div(s, gf2wsz), ed = div(e, gf2wsz);
