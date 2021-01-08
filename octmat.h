@@ -25,8 +25,6 @@ typedef struct {
 #define om_A(v, x, y) (om_R(v, x)[(y)])
 
 void om_resize(octmat *v, size_t rows, size_t cols);
-void om_copy(octmat *v1, octmat *v0);
 void om_destroy(octmat *v);
-void om_print(octmat m, FILE *stream);
 
 #endif

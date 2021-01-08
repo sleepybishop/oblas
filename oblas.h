@@ -1,34 +1,49 @@
-#ifndef OCTET_BLAS_H
-#define OCTET_BLAS_H
+#ifndef OBLAS_H
+#define OBLAS_H
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "octmat.h"
-#include "octtables.h"
+#define GF_ADD(a, b) ((a) ^ (b))
+#define GF_SUB(a, b) ((a) ^ (b))
+#define GF_MUL(t, a, b) (t##_EXP[t##_LOG[u] + t##_LOG[v]])
+#define GF_DIV(t, a, b, s) (t##_EXP[t##_LOG[u] - t##_LOG[v] + (s - 1)])
 
-#define OCTET_MUL(u, v) OCT_EXP[OCT_LOG[u] + OCT_LOG[v]]
-#define OCTET_DIV(u, v) OCT_EXP[OCT_LOG[u] - OCT_LOG[v] + 255]
-#define OCTET_SWAP(u, v)                                                       \
-  do {                                                                         \
-    uint8_t __tmp = (u);                                                       \
-    (u) = (v);                                                                 \
-    (v) = __tmp;                                                               \
-  } while (0)
+#define oblas_word uint32_t
 
-#define ALIGNED_COLS(k)                                                        \
-  (((k) / OCTMAT_ALIGN) + (((k) % OCTMAT_ALIGN) ? 1 : 0)) * OCTMAT_ALIGN
+typedef enum { GF2_1 = 0, GF2_2 = 1, GF2_4 = 2, GF2_8 = 3 } gf_field;
 
-typedef uint8_t octet;
+typedef struct {
+  gf_field field;
+  unsigned vpw;
+  unsigned exp;
+  unsigned len;
+  unsigned poly;
+} gf;
 
-void ocopy(uint8_t *a, uint8_t *b, size_t i, size_t j, size_t k);
-void oswaprow(uint8_t *a, size_t i, size_t j, size_t k);
-void oswapcol(uint8_t *a, size_t i, size_t j, size_t k, size_t l);
-void oaxpy(uint8_t *a, uint8_t *b, size_t i, size_t j, size_t k, uint8_t u);
-void oaddrow(uint8_t *a, uint8_t *b, size_t i, size_t j, size_t k);
-void oscal(uint8_t *a, size_t i, size_t k, uint8_t u);
-void ozero(uint8_t *restrict a, size_t i, size_t k);
-void ogemm(uint8_t *a, uint8_t *b, uint8_t *c, size_t n, size_t k, size_t m);
-size_t onnz(uint8_t *a, size_t i, size_t s, size_t e, size_t k);
-void oaxpy_b32(uint8_t *a, uint32_t *b, size_t i, size_t k, uint8_t u);
+typedef struct {
+  gf_field field;
+  unsigned rows;
+  unsigned cols;
+  unsigned stride;
+  unsigned align;
+  oblas_word *bits;
+} gfmat;
+
+gfmat *gfmat_new(gf_field field, unsigned rows, unsigned cols);
+gfmat *gfmat_copy(gfmat *_m);
+void gfmat_free(gfmat *m);
+uint8_t gfmat_get(gfmat *m, unsigned i, unsigned j);
+void gfmat_set(gfmat *m, unsigned i, unsigned j, uint8_t b);
+void gfmat_print(gfmat *m, FILE *stream);
+void gfmat_add(gfmat *a, gfmat *b, unsigned i, unsigned j);
+void gfmat_swaprow(gfmat *m, unsigned i, unsigned j);
+void gfmat_axpy(gfmat *a, gfmat *b, unsigned i, unsigned j, uint8_t u);
+void gfmat_scal(gfmat *a, unsigned i, uint8_t u);
+void gfmat_fill(gfmat *m, unsigned i, uint8_t *dst);
+void gfmat_expand(gfmat *m, uint32_t *src, unsigned i, uint8_t u);
+int gfmat_nnz(gfmat *m, unsigned i, unsigned s, unsigned e);
+void gfmat_swapcol(gfmat *m, unsigned i, unsigned j);
 
 #endif
