@@ -185,6 +185,11 @@ void gfmat_scal(gfmat *a, unsigned i, uint8_t u) {
   gf_field_scal(a->field, a->stride, (uint8_t *)ap, u);
 }
 
+void gfmat_zero(gfmat *a, unsigned i) {
+  oblas_word *ap = a->bits + i * a->stride;
+  oblas_zero((uint8_t *)ap, a->stride * sizeof(oblas_word));
+}
+
 void gfmat_fill(gfmat *m, unsigned i, uint8_t *dst) {
   gf field = fields[m->field];
   oblas_word *a = m->bits + i * m->stride;

@@ -41,6 +41,7 @@ void gfmat_add(gfmat *a, gfmat *b, unsigned i, unsigned j);
 void gfmat_swaprow(gfmat *m, unsigned i, unsigned j);
 void gfmat_axpy(gfmat *a, gfmat *b, unsigned i, unsigned j, uint8_t u);
 void gfmat_scal(gfmat *a, unsigned i, uint8_t u);
+void gfmat_zero(gfmat *a, unsigned i);
 void gfmat_fill(gfmat *m, unsigned i, uint8_t *dst);
 void gfmat_expand(gfmat *m, uint32_t *src, unsigned i, uint8_t u);
 int gfmat_nnz(gfmat *m, unsigned i, unsigned s, unsigned e);
