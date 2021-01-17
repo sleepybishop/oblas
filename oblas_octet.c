@@ -28,8 +28,8 @@ void oaxpy(uint8_t *restrict a, uint8_t *restrict b, size_t i, size_t j,
   if (u == 1)
     return oaddrow(a, b, i, j, k);
 
-  const uint8_t *urow_hi = GF256_SHUF_HI[u];
-  const uint8_t *urow_lo = GF256_SHUF_LO[u];
+  const uint8_t *urow_hi = GF2_8_SHUF_HI + (u * 16);
+  const uint8_t *urow_lo = GF2_8_SHUF_LO + (u * 16);
   oblas_axpy(ap, bp, k, urow_lo, urow_hi);
 }
 
@@ -46,8 +46,8 @@ void oscal(uint8_t *restrict a, size_t i, size_t k, uint8_t u) {
   if (u < 2)
     return;
 
-  const uint8_t *urow_lo = GF256_SHUF_LO[u];
-  const uint8_t *urow_hi = GF256_SHUF_HI[u];
+  const uint8_t *urow_lo = GF2_8_SHUF_LO + (u * 16);
+  const uint8_t *urow_hi = GF2_8_SHUF_HI + (u * 16);
   oblas_scal(ap, k, urow_lo, urow_hi);
 }
 

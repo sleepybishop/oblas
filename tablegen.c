@@ -19,10 +19,11 @@ static const gf fields[] = {
 };
 
 typedef struct {
-  uint8_t EXP[UINT8_MAX];
   uint8_t LOG[UINT8_MAX + 1];
-  uint8_t SHUF_LO[UINT8_MAX + 1][16];
-  uint8_t SHUF_HI[UINT8_MAX + 1][16];
+  uint8_t EXP[UINT8_MAX];
+  uint8_t INV[UINT8_MAX + 1];
+  uint8_t SHUF_LO[(UINT8_MAX + 1) * 16];
+  uint8_t SHUF_HI[(UINT8_MAX + 1) * 16];
 } gftbl;
 
 void fill_tabs(const gf_field f, gftbl *tabs) {
@@ -48,37 +49,49 @@ void fill_tabs(const gf_field f, gftbl *tabs) {
   tabs->LOG[0] = field.len - 1;
   for (int i = 0; i < (field.len - 1); i++)
     tabs->LOG[tabs->EXP[i]] = i;
+
+  /* fill inverse table */
+  for (int i = 0; i < field.len; i++) {
+    switch (i) {
+    case 0:
+    case 1:
+      tabs->INV[i] = i;
+      break;
+    default:
+      tabs->INV[i] = tabs->EXP[tabs->LOG[0] - tabs->LOG[i]];
+    }
+  }
 }
 
 void fill_shuffle_tabs(const gf_field f, gftbl *tabs) {
   gf field = fields[f];
 
   for (int i = 0; i < field.len; i++) {
+    uint8_t *tab_lo_row = tabs->SHUF_LO + i * 16;
+    uint8_t *tab_hi_row = tabs->SHUF_HI + i * 16;
     for (int j = 0; j < 16; j++) {
-      tabs->SHUF_LO[i][j] = 0;
-      tabs->SHUF_HI[i][j] = 0;
+      tab_lo_row[j] = 0;
+      tab_hi_row[j] = 0;
       if (i == 0 || j == 0)
         continue;
       switch (f) {
       case GF2_2:
-        tabs->SHUF_LO[i][j] =
-            tabs->EXP[(tabs->LOG[i] + tabs->LOG[j / field.len]) %
-                      (field.len - 1)];
-        tabs->SHUF_LO[i][j] <<= field.exp;
-        tabs->SHUF_LO[i][j] |=
-            tabs->EXP[(tabs->LOG[i] + tabs->LOG[j % field.len]) %
-                      (field.len - 1)];
-        tabs->SHUF_HI[i][j] = tabs->SHUF_LO[i][j] << field.len;
+        tab_lo_row[j] = tabs->EXP[(tabs->LOG[i] + tabs->LOG[j / field.len]) %
+                                  (field.len - 1)];
+        tab_lo_row[j] <<= field.exp;
+        tab_lo_row[j] |= tabs->EXP[(tabs->LOG[i] + tabs->LOG[j % field.len]) %
+                                   (field.len - 1)];
+        tab_hi_row[j] = tab_lo_row[j] << field.len;
         break;
       case GF2_4:
-        tabs->SHUF_LO[i][j] =
+        tab_lo_row[j] =
             tabs->EXP[(tabs->LOG[i] + tabs->LOG[j]) % (field.len - 1)];
-        tabs->SHUF_HI[i][j] = tabs->SHUF_LO[i][j] << field.exp;
+        tab_hi_row[j] = tab_lo_row[j] << field.exp;
         break;
       case GF2_8:
-        tabs->SHUF_LO[i][j] =
+        tab_lo_row[j] =
             tabs->EXP[(tabs->LOG[i] + tabs->LOG[j]) % (field.len - 1)];
-        tabs->SHUF_HI[i][j] =
+        tab_hi_row[j] =
             tabs->EXP[(tabs->LOG[i] + tabs->LOG[j << 4]) % (field.len - 1)];
         break;
       default:
@@ -88,71 +101,19 @@ void fill_shuffle_tabs(const gf_field f, gftbl *tabs) {
   }
 }
 
-void print_log_tab(FILE *stream, const gf field, const gftbl *tabs) {
+void print_tab(FILE *stream, const uint8_t *tab, size_t len, size_t loop) {
   fprintf(stream, "{\n");
-  for (int i = 0; i < field.len; i++) {
-    fprintf(stream, "%3d,", tabs->LOG[i]);
+  for (int i = 0; i < len * loop; i++) {
+    fprintf(stream, "%3d,", tab[i % len]);
     if (i && (i % 16 == 15))
       fprintf(stream, "\n");
-  }
-  fprintf(stream, "};\n\n");
-}
-
-void print_exp_tab(FILE *stream, const gf field, const gftbl *tabs) {
-  fprintf(stream, "{\n");
-  for (int i = 0; i < 2 * (field.len - 1); i++) {
-    fprintf(stream, "%3d,", tabs->EXP[i % (field.len - 1)]);
-    if (i && (i % 16 == 15))
-      fprintf(stream, "\n");
-  }
-  fprintf(stream, "};\n\n");
-}
-
-void print_inv_tab(FILE *stream, const gf field, const gftbl *tabs) {
-  fprintf(stream, "{\n");
-  for (int i = 0; i < field.len; i++) {
-    switch (i) {
-    case 0:
-      fprintf(stream, "%3d,", 0);
-      break;
-    case 1:
-      fprintf(stream, "%3d,", 1);
-      break;
-    default:
-      fprintf(stream, "%3d,", tabs->EXP[tabs->LOG[0] - tabs->LOG[i]]);
-    }
-    if (i && (i % 16 == 15))
-      fprintf(stream, "\n");
-  }
-  fprintf(stream, "};\n\n");
-}
-
-void print_shuf_lo_tab(FILE *stream, const gf field, const gftbl *tabs) {
-  fprintf(stream, "{\n");
-  for (int i = 0; i < field.len; i++) {
-    fprintf(stream, "{");
-    for (int j = 0; j < 16; j++) {
-      fprintf(stream, "%3d,", tabs->SHUF_LO[i][j]);
-    }
-    fprintf(stream, "},\n");
-  }
-  fprintf(stream, "};\n\n");
-}
-
-void print_shuf_hi_tab(FILE *stream, const gf field, const gftbl *tabs) {
-  fprintf(stream, "{\n");
-  for (int i = 0; i < field.len; i++) {
-    fprintf(stream, "{");
-    for (int j = 0; j < 16; j++) {
-      fprintf(stream, "%3d,", tabs->SHUF_HI[i][j]);
-    }
-    fprintf(stream, "},\n");
   }
   fprintf(stream, "};\n\n");
 }
 
 void print_tabs(FILE *stream, const gf field, const gftbl *tabs) {
-  char *pfx[] = {"GF2", "GF4", "GF16", "GF256"}, *prefix = pfx[field.field];
+  char *pfx[] = {"GF2_1", "GF2_2", "GF2_4", "GF2_8"},
+       *prefix = pfx[field.field];
 
   fprintf(stream, "/* these tables were generated with polynomial: %u */\n\n",
           field.poly);
@@ -160,21 +121,19 @@ void print_tabs(FILE *stream, const gf field, const gftbl *tabs) {
   fprintf(stream, "/* clang-format off */\n");
 
   fprintf(stream, "static const uint8_t %s_LOG[] = \n", prefix);
-  print_log_tab(stream, field, tabs);
+  print_tab(stream, tabs->LOG, field.len, 1);
 
   fprintf(stream, "static const uint8_t %s_EXP[] = \n", prefix);
-  print_exp_tab(stream, field, tabs);
+  print_tab(stream, tabs->EXP, field.len - 1, 2);
 
   fprintf(stream, "static const uint8_t %s_INV[] = \n", prefix);
-  print_inv_tab(stream, field, tabs);
+  print_tab(stream, tabs->INV, field.len, 1);
 
-  fprintf(stream, "static const uint8_t %s_SHUF_LO[%d][16] = \n", prefix,
-          field.len);
-  print_shuf_lo_tab(stream, field, tabs);
+  fprintf(stream, "static const uint8_t %s_SHUF_LO[] = \n", prefix);
+  print_tab(stream, tabs->SHUF_LO, 16 * field.len, 1);
 
-  fprintf(stream, "static const uint8_t %s_SHUF_HI[%d][16] = \n", prefix,
-          field.len);
-  print_shuf_hi_tab(stream, field, tabs);
+  fprintf(stream, "static const uint8_t %s_SHUF_HI[] = \n", prefix);
+  print_tab(stream, tabs->SHUF_HI, 16 * field.len, 1);
 
   fprintf(stream, "/* clang-format on */\n");
   fprintf(stream, "#endif\n");

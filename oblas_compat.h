@@ -6,9 +6,9 @@
 #include "gf2_8_tables.h"
 #include "octmat.h"
 
-#define OCT_LOG GF256_LOG
-#define OCT_EXP GF256_EXP
-#define OCT_INV GF256_INV
+#define OCT_LOG GF2_8_LOG
+#define OCT_EXP GF2_8_EXP
+#define OCT_INV GF2_8_INV
 
 #define ALIGNED_COLS(k)                                                        \
   (((k) / OCTMAT_ALIGN) + (((k) % OCTMAT_ALIGN) ? 1 : 0)) * OCTMAT_ALIGN

@@ -130,15 +130,15 @@ void static gf_field_axpy(gf_field f, unsigned stride, uint8_t *ap, uint8_t *bp,
   switch (f) {
   case GF2_2:
     oblas_axpy((uint8_t *)ap, (uint8_t *)bp, stride * sizeof(oblas_word),
-               GF4_SHUF_LO[u], GF4_SHUF_HI[u]);
+               GF2_2_SHUF_LO + (u * 16), GF2_2_SHUF_HI + (u * 16));
     break;
   case GF2_4:
     oblas_axpy((uint8_t *)ap, (uint8_t *)bp, stride * sizeof(oblas_word),
-               GF16_SHUF_LO[u], GF16_SHUF_HI[u]);
+               GF2_4_SHUF_LO + (u * 16), GF2_4_SHUF_HI + (u * 16));
     break;
   case GF2_8:
     oblas_axpy((uint8_t *)ap, (uint8_t *)bp, stride * sizeof(oblas_word),
-               GF256_SHUF_LO[u], GF256_SHUF_HI[u]);
+               GF2_8_SHUF_LO + (u * 16), GF2_8_SHUF_HI + (u * 16));
     break;
   default:
     break;
@@ -148,16 +148,16 @@ void static gf_field_axpy(gf_field f, unsigned stride, uint8_t *ap, uint8_t *bp,
 void static gf_field_scal(gf_field f, unsigned stride, uint8_t *ap, uint8_t u) {
   switch (f) {
   case GF2_2:
-    oblas_scal((uint8_t *)ap, stride * sizeof(oblas_word), GF4_SHUF_LO[u],
-               GF4_SHUF_HI[u]);
+    oblas_scal((uint8_t *)ap, stride * sizeof(oblas_word),
+               GF2_2_SHUF_LO + (u * 16), GF2_2_SHUF_HI + (u * 16));
     break;
   case GF2_4:
-    oblas_scal((uint8_t *)ap, stride * sizeof(oblas_word), GF16_SHUF_LO[u],
-               GF16_SHUF_HI[u]);
+    oblas_scal((uint8_t *)ap, stride * sizeof(oblas_word),
+               GF2_4_SHUF_LO + (u * 16), GF2_4_SHUF_HI + (u * 16));
     break;
   case GF2_8:
-    oblas_scal((uint8_t *)ap, stride * sizeof(oblas_word), GF256_SHUF_LO[u],
-               GF256_SHUF_HI[u]);
+    oblas_scal((uint8_t *)ap, stride * sizeof(oblas_word),
+               GF2_8_SHUF_LO + (u * 16), GF2_8_SHUF_HI + (u * 16));
     break;
   default:
     break;

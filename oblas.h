@@ -7,8 +7,8 @@
 
 #define GF_ADD(a, b) ((a) ^ (b))
 #define GF_SUB(a, b) ((a) ^ (b))
-#define GF_MUL(t, a, b) (t##_EXP[t##_LOG[u] + t##_LOG[v]])
-#define GF_DIV(t, a, b, s) (t##_EXP[t##_LOG[u] - t##_LOG[v] + (s - 1)])
+#define GF_MUL(t, a, b) (t##_EXP[t##_LOG[a] + t##_LOG[b]])
+#define GF_DIV(t, a, b, s) (t##_EXP[t##_LOG[a] - t##_LOG[b] + (s - 1)])
 
 #define oblas_word uint32_t
 
