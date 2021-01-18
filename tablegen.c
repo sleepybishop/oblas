@@ -76,12 +76,16 @@ void fill_shuffle_tabs(const gf_field f, gftbl *tabs) {
         continue;
       switch (f) {
       case GF2_2:
-        tab_lo_row[j] = tabs->EXP[(tabs->LOG[i] + tabs->LOG[j / field.len]) %
-                                  (field.len - 1)];
-        tab_lo_row[j] <<= field.exp;
-        tab_lo_row[j] |= tabs->EXP[(tabs->LOG[i] + tabs->LOG[j % field.len]) %
-                                   (field.len - 1)];
-        tab_hi_row[j] = tab_lo_row[j] << field.len;
+        if ((j / field.len)) {
+          tab_lo_row[j] = tabs->EXP[(tabs->LOG[i] + tabs->LOG[j / field.len]) %
+                                    (field.len - 1)];
+          tab_lo_row[j] <<= field.exp;
+        }
+        if (j % field.len) {
+          tab_lo_row[j] |= tabs->EXP[(tabs->LOG[i] + tabs->LOG[j % field.len]) %
+                                     (field.len - 1)];
+          tab_hi_row[j] = tab_lo_row[j] << field.len;
+        }
         break;
       case GF2_4:
         tab_lo_row[j] =
