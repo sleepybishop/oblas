@@ -1,15 +1,6 @@
 #include <emmintrin.h> /* SSE2 */
 #include <tmmintrin.h> /* SSE3 */
 
-void oblas_xor(uint8_t *a, uint8_t *b, size_t k) {
-  __m128i *ap = (__m128i *)a, *ae = (__m128i *)(a + k);
-  __m128i *bp = (__m128i *)b;
-  for (; ap < ae; ap++, bp++) {
-    _mm_storeu_si128(ap,
-                     _mm_xor_si128(_mm_loadu_si128(ap), _mm_loadu_si128(bp)));
-  }
-}
-
 void oblas_axpy(uint8_t *a, const uint8_t *b, size_t k, const uint8_t *u_lo,
                 const uint8_t *u_hi) {
   const __m128i mask = _mm_set1_epi8(0x0f);
@@ -43,17 +34,6 @@ void oblas_scal(uint8_t *a, size_t k, const uint8_t *u_lo,
     lo = _mm_shuffle_epi8(urow_lo, lo);
     hi = _mm_shuffle_epi8(urow_hi, hi);
     _mm_storeu_si128(ap, _mm_xor_si128(lo, hi));
-  }
-}
-
-void oblas_swap(uint8_t *a, uint8_t *b, size_t k) {
-  __m128i *ap = (__m128i *)a, *ae = (__m128i *)(a + k);
-  __m128i *bp = (__m128i *)b;
-  for (; ap < ae; ap++, bp++) {
-    __m128i atmp = _mm_loadu_si128((__m128i *)(ap));
-    __m128i btmp = _mm_loadu_si128((__m128i *)(bp));
-    _mm_storeu_si128(ap, btmp);
-    _mm_storeu_si128(bp, atmp);
   }
 }
 

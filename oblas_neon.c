@@ -1,12 +1,5 @@
 #include <arm_neon.h>
 
-void oblas_xor(uint8_t *a, uint8_t *b, size_t k) {
-  uint8_t *ap = a, *ae = a + k, *bp = b;
-  for (; ap < ae; ap += sizeof(uint8x16_t), bp += sizeof(uint8x16_t)) {
-    vst1q_u8(ap, veorq_u8(vld1q_u8(ap), vld1q_u8(bp)));
-  }
-}
-
 void oblas_axpy(uint8_t *a, const uint8_t *b, size_t k, const uint8_t *u_lo,
                 const uint8_t *u_hi) {
   uint8_t *ap = a, *ae = a + k, *bp = (uint8_t *)b;
@@ -40,16 +33,6 @@ void oblas_scal(uint8_t *a, size_t k, const uint8_t *u_lo,
     lo = vqtbl1q_u8(urow_lo, lo);
     hi = vqtbl1q_u8(urow_hi, hi);
     vst1q_u8(ap, veorq_u8(lo, hi));
-  }
-}
-
-void oblas_swap(uint8_t *a, uint8_t *b, size_t k) {
-  uint8_t *ap = a, *ae = a + k, *bp = b;
-  for (; ap < ae; ap += sizeof(uint8x16_t), bp += sizeof(uint8x16_t)) {
-    uint8x16_t atmp = vld1q_u8(ap);
-    uint8x16_t btmp = vld1q_u8(bp);
-    vst1q_u8(ap, btmp);
-    vst1q_u8(bp, atmp);
   }
 }
 

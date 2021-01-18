@@ -1,5 +1,5 @@
+#include "oblas.h"
 #include "oblas_compat.h"
-#include "util.h"
 #include <errno.h>
 
 void ocopy(uint8_t *restrict a, uint8_t *restrict b, size_t i, size_t j,

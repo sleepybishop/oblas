@@ -1,6 +1,6 @@
 #include "octmat.h"
+#include "oblas.h"
 #include "oblas_compat.h"
-#include "util.h"
 
 void om_resize(octmat *v, size_t rows, size_t cols) {
   void *aligned = NULL;

@@ -1,14 +1,5 @@
 #include <immintrin.h> /* AVX */
 
-void oblas_xor(uint8_t *a, uint8_t *b, size_t k) {
-  __m256i *ap = (__m256i *)a, *ae = (__m256i *)(a + k);
-  __m256i *bp = (__m256i *)b;
-  for (; ap < ae; ap++, bp++) {
-    _mm256_storeu_si256(
-        ap, _mm256_xor_si256(_mm256_loadu_si256(ap), _mm256_loadu_si256(bp)));
-  }
-}
-
 void oblas_axpy(uint8_t *a, const uint8_t *b, size_t k, const uint8_t *u_lo,
                 const uint8_t *u_hi) {
   const __m256i mask = _mm256_set1_epi8(0x0f);
@@ -42,17 +33,6 @@ void oblas_scal(uint8_t *a, size_t k, const uint8_t *u_lo,
     lo = _mm256_shuffle_epi8(urow_lo, lo);
     hi = _mm256_shuffle_epi8(urow_hi, hi);
     _mm256_storeu_si256(ap, _mm256_xor_si256(lo, hi));
-  }
-}
-
-void oblas_swap(uint8_t *a, uint8_t *b, size_t k) {
-  __m256i *ap = (__m256i *)a, *ae = (__m256i *)(a + k);
-  __m256i *bp = (__m256i *)b;
-  for (; ap < ae; ap++, bp++) {
-    __m256i atmp = _mm256_loadu_si256((__m256i *)(ap));
-    __m256i btmp = _mm256_loadu_si256((__m256i *)(bp));
-    _mm256_storeu_si256(ap, btmp);
-    _mm256_storeu_si256(bp, atmp);
   }
 }
 

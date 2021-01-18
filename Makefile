@@ -3,10 +3,9 @@ CFLAGS += -funroll-loops -ftree-vectorize -fno-inline
 #CFLAGS += -fopt-info-vec
 CFLAGS += -Wno-unused
 
-OBJ=oblas.o oblas_octet.o util.o octmat.o
+OBJ=oblas.o gfmat.o oblas.o oblas_octmat.o octmat.o
 
-#all: liboblas.a
-all: liboblas.a tablegen
+all: liboblas.a
 
 tablegen: tablegen.c
 
