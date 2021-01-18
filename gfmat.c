@@ -52,7 +52,7 @@ gfmat *gfmat_new(gf_field field, unsigned rows, unsigned cols) {
   m->rows = rows;
   m->cols = cols;
   m->stride = ((cols / vpw) + ((cols % vpw) ? 1 : 0));
-  m->align = OCTMAT_ALIGN;
+  m->align = (field == GF2_1) ? sizeof(void *) : OCTMAT_ALIGN;
   m->stride = ALIGN_TO(m->stride, m->align);
   m->bits = oblas_alloc(rows, m->stride * sizeof(oblas_word), m->align);
   oblas_zero(m->bits, rows * m->stride * sizeof(oblas_word));
