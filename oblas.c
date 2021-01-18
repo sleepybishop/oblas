@@ -22,18 +22,24 @@ static const gf fields[] = {
         .exp = 2,
         .len = 1 << 2,
         .vpw = (sizeof(oblas_word) * 4),
+        .shuf_lo = GF2_2_SHUF_LO,
+        .shuf_hi = GF2_2_SHUF_HI,
     },
     {
         .field = GF2_4,
         .exp = 4,
         .len = 1 << 4,
         .vpw = (sizeof(oblas_word) * 2),
+        .shuf_lo = GF2_4_SHUF_LO,
+        .shuf_hi = GF2_4_SHUF_HI,
     },
     {
         .field = GF2_8,
         .exp = 8,
         .len = 1 << 8,
         .vpw = (sizeof(oblas_word) * 1),
+        .shuf_lo = GF2_8_SHUF_LO,
+        .shuf_hi = GF2_8_SHUF_HI,
     },
 };
 
@@ -125,45 +131,6 @@ void gfmat_swaprow(gfmat *m, unsigned i, unsigned j) {
   oblas_swap((uint8_t *)a, (uint8_t *)b, m->stride * sizeof(oblas_word));
 }
 
-void static gf_field_axpy(gf_field f, unsigned stride, uint8_t *ap, uint8_t *bp,
-                          uint8_t u) {
-  switch (f) {
-  case GF2_2:
-    oblas_axpy((uint8_t *)ap, (uint8_t *)bp, stride * sizeof(oblas_word),
-               GF2_2_SHUF_LO + (u * 16), GF2_2_SHUF_HI + (u * 16));
-    break;
-  case GF2_4:
-    oblas_axpy((uint8_t *)ap, (uint8_t *)bp, stride * sizeof(oblas_word),
-               GF2_4_SHUF_LO + (u * 16), GF2_4_SHUF_HI + (u * 16));
-    break;
-  case GF2_8:
-    oblas_axpy((uint8_t *)ap, (uint8_t *)bp, stride * sizeof(oblas_word),
-               GF2_8_SHUF_LO + (u * 16), GF2_8_SHUF_HI + (u * 16));
-    break;
-  default:
-    break;
-  }
-}
-
-void static gf_field_scal(gf_field f, unsigned stride, uint8_t *ap, uint8_t u) {
-  switch (f) {
-  case GF2_2:
-    oblas_scal((uint8_t *)ap, stride * sizeof(oblas_word),
-               GF2_2_SHUF_LO + (u * 16), GF2_2_SHUF_HI + (u * 16));
-    break;
-  case GF2_4:
-    oblas_scal((uint8_t *)ap, stride * sizeof(oblas_word),
-               GF2_4_SHUF_LO + (u * 16), GF2_4_SHUF_HI + (u * 16));
-    break;
-  case GF2_8:
-    oblas_scal((uint8_t *)ap, stride * sizeof(oblas_word),
-               GF2_8_SHUF_LO + (u * 16), GF2_8_SHUF_HI + (u * 16));
-    break;
-  default:
-    break;
-  }
-}
-
 void gfmat_axpy(gfmat *a, gfmat *b, unsigned i, unsigned j, uint8_t u) {
   oblas_word *ap = a->bits + i * a->stride;
   oblas_word *bp = b->bits + j * b->stride;
@@ -172,8 +139,11 @@ void gfmat_axpy(gfmat *a, gfmat *b, unsigned i, unsigned j, uint8_t u) {
     return;
   if (u == 1)
     oblas_xor((uint8_t *)ap, (uint8_t *)bp, a->stride * sizeof(oblas_word));
-  else
-    gf_field_axpy(a->field, a->stride, (uint8_t *)ap, (uint8_t *)bp, u);
+  else {
+    gf field = fields[a->field];
+    oblas_axpy((uint8_t *)ap, (uint8_t *)bp, a->stride,
+               field.shuf_lo + (u * 16), field.shuf_hi + (u * 16));
+  }
 }
 
 void gfmat_scal(gfmat *a, unsigned i, uint8_t u) {
@@ -182,7 +152,9 @@ void gfmat_scal(gfmat *a, unsigned i, uint8_t u) {
   if (u < 2)
     return;
 
-  gf_field_scal(a->field, a->stride, (uint8_t *)ap, u);
+  gf field = fields[a->field];
+  oblas_scal((uint8_t *)ap, a->stride, field.shuf_lo + (u * 16),
+             field.shuf_hi + (u * 16));
 }
 
 void gfmat_zero(gfmat *a, unsigned i) {

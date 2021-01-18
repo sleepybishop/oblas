@@ -6,11 +6,7 @@ CFLAGS += -Wno-unused
 OBJ=oblas.o oblas_octet.o util.o octmat.o
 
 #all: liboblas.a
-all: testgf4 testgf16 liboblas.a tablegen
-
-testgf16: $(OBJ)
-
-testgf4: $(OBJ)
+all: liboblas.a tablegen
 
 tablegen: tablegen.c
 

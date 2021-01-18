@@ -1,8 +1,6 @@
 # oblas
 
-blas-like routines to solve systems in finite fields [gf2, gf256]
-
-The table generator `tablegen.c` also supports [gf4, gf16] but routines to work with packed vectors in those fields is incomplete.
+blas-like routines to solve systems in finite fields [gf2, gf4, gf16 and gf256]
 
 #### Optimizing for different archs
  - NEON: `make CPPFLAGS+="-DOBLAS_NEON"`

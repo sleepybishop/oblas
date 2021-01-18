@@ -20,6 +20,8 @@ typedef struct {
   unsigned exp;
   unsigned len;
   unsigned poly;
+  const uint8_t *shuf_lo;
+  const uint8_t *shuf_hi;
 } gf;
 
 typedef struct {
