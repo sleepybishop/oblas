@@ -7,7 +7,6 @@ typedef struct {
   unsigned rows;
   unsigned cols;
   unsigned stride;
-  unsigned align;
   oblas_word *bits;
 } binmat;
 

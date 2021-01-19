@@ -174,11 +174,6 @@ void gfmat_fill(gfmat *m, unsigned i, uint8_t *dst) {
   }
 }
 
-void gfmat_expand(gfmat *m, uint32_t *src, unsigned i, uint8_t u) {
-  oblas_word *a = m->bits + i * m->stride;
-  oblas_axpy_gf2_gf256_32((uint8_t *)a, src, m->stride * sizeof(oblas_word), u);
-}
-
 unsigned gfmat_nnz(gfmat *m, unsigned i, unsigned s, unsigned e) {
   if (i >= m->rows || s < 0 || s > e || e > (m->cols + 1))
     return 0;

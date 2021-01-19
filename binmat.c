@@ -10,9 +10,8 @@ binmat *binmat_new(unsigned rows, unsigned cols) {
   m->rows = rows;
   m->cols = cols;
   m->stride = ((cols / BM_VPW) + ((cols % BM_VPW) ? 1 : 0));
-  m->align = sizeof(void *);
-  m->stride = ALIGN_TO(m->stride, m->align);
-  m->bits = oblas_alloc(rows, m->stride * sizeof(oblas_word), m->align);
+  m->stride = ALIGN_TO(m->stride, sizeof(void *));
+  m->bits = oblas_alloc(rows, m->stride * sizeof(oblas_word), sizeof(void *));
   oblas_zero(m->bits, rows * m->stride * sizeof(oblas_word));
   return m;
 }
