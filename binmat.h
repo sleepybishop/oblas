@@ -20,6 +20,6 @@ void binmat_swaprow(binmat *m, unsigned i, unsigned j);
 void binmat_zero(binmat *a, unsigned i);
 void binmat_fill(binmat *m, unsigned i, uint8_t *dst);
 void binmat_expand(binmat *m, uint32_t *src, unsigned i, uint8_t u);
-int binmat_nnz(binmat *m, unsigned i, unsigned s, unsigned e);
+unsigned binmat_nnz(binmat *m, unsigned i, unsigned s, unsigned e);
 
 #endif

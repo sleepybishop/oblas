@@ -64,7 +64,7 @@ void binmat_zero(binmat *a, unsigned i) {
 
 void binmat_fill(binmat *m, unsigned i, uint8_t *dst) {
   oblas_word *a = m->bits + i * m->stride;
-  for (int idx = 0; idx < m->stride; idx++) {
+  for (unsigned idx = 0; idx < m->stride; idx++) {
     oblas_word tmp = a[idx];
     while (tmp > 0) {
       unsigned tz = __builtin_ctz(tmp);
@@ -80,7 +80,7 @@ void binmat_expand(binmat *m, uint32_t *src, unsigned i, uint8_t u) {
   oblas_axpy_gf2_gf256_32((uint8_t *)a, src, m->stride * sizeof(oblas_word), u);
 }
 
-int binmat_nnz(binmat *m, unsigned i, unsigned s, unsigned e) {
+unsigned binmat_nnz(binmat *m, unsigned i, unsigned s, unsigned e) {
   if (i >= m->rows || s < 0 || s > e || e > (m->cols + 1))
     return 0;
   oblas_word *a = m->bits + i * m->stride;
@@ -97,7 +97,7 @@ int binmat_nnz(binmat *m, unsigned i, unsigned s, unsigned e) {
     }
     nnz += __builtin_popcount(z & masks[0]);
   }
-  for (int idx = sq + 1; idx < eq; idx++) {
+  for (unsigned idx = sq + 1; idx < eq; idx++) {
     oblas_word tmp = a[idx], z = 0;
     while (tmp > 0) {
       z = z | 1 << (__builtin_ctz(tmp));

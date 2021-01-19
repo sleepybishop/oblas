@@ -25,7 +25,7 @@ void gfmat_scal(gfmat *a, unsigned i, uint8_t u);
 void gfmat_zero(gfmat *a, unsigned i);
 void gfmat_fill(gfmat *m, unsigned i, uint8_t *dst);
 void gfmat_expand(gfmat *m, uint32_t *src, unsigned i, uint8_t u);
-int gfmat_nnz(gfmat *m, unsigned i, unsigned s, unsigned e);
+unsigned gfmat_nnz(gfmat *m, unsigned i, unsigned s, unsigned e);
 void gfmat_swapcol(gfmat *m, unsigned i, unsigned j);
 
 #endif

@@ -102,13 +102,13 @@ void gfmat_print(gfmat *m, FILE *stream) {
   fprintf(stream, "%s [%ux%u]\n", fn[m->field], (unsigned)m->rows,
           (unsigned)m->cols);
   fprintf(stream, "|     ");
-  for (int j = 0; j < m->cols; j++) {
+  for (unsigned j = 0; j < m->cols; j++) {
     fprintf(stream, "| %03d ", j);
   }
   fprintf(stream, "|\n");
-  for (int i = 0; i < m->rows; i++) {
+  for (unsigned i = 0; i < m->rows; i++) {
     fprintf(stream, "| %03d | %3d ", i, gfmat_get(m, i, 0));
-    for (int j = 1; j < m->cols; j++) {
+    for (unsigned j = 1; j < m->cols; j++) {
       fprintf(stream, "| %3d ", gfmat_get(m, i, j));
     }
     fprintf(stream, "|\n");
@@ -163,7 +163,7 @@ void gfmat_zero(gfmat *a, unsigned i) {
 void gfmat_fill(gfmat *m, unsigned i, uint8_t *dst) {
   gf field = fields[m->field];
   oblas_word *a = m->bits + i * m->stride;
-  for (int idx = 0; idx < m->stride; idx++) {
+  for (unsigned idx = 0; idx < m->stride; idx++) {
     oblas_word tmp = a[idx];
     while (tmp > 0) {
       unsigned tz = __builtin_ctz(tmp);
@@ -179,7 +179,7 @@ void gfmat_expand(gfmat *m, uint32_t *src, unsigned i, uint8_t u) {
   oblas_axpy_gf2_gf256_32((uint8_t *)a, src, m->stride * sizeof(oblas_word), u);
 }
 
-int gfmat_nnz(gfmat *m, unsigned i, unsigned s, unsigned e) {
+unsigned gfmat_nnz(gfmat *m, unsigned i, unsigned s, unsigned e) {
   if (i >= m->rows || s < 0 || s > e || e > (m->cols + 1))
     return 0;
   gf field = fields[m->field];
@@ -197,7 +197,7 @@ int gfmat_nnz(gfmat *m, unsigned i, unsigned s, unsigned e) {
     }
     nnz += __builtin_popcount(z & masks[0]);
   }
-  for (int idx = sq + 1; idx < eq; idx++) {
+  for (unsigned idx = sq + 1; idx < eq; idx++) {
     oblas_word tmp = a[idx], z = 0;
     while (tmp > 0) {
       z = z | 1 << (__builtin_ctz(tmp) / field.exp);
@@ -226,7 +226,7 @@ void gfmat_swapcol(gfmat *m, unsigned i, unsigned j) {
   unsigned q = j / field.vpw;
   unsigned p_at = (i % field.vpw) * field.exp;
   unsigned q_at = (j % field.vpw) * field.exp;
-  for (int r = 0; r < m->rows; r++, p += m->stride, q += m->stride) {
+  for (unsigned r = 0; r < m->rows; r++, p += m->stride, q += m->stride) {
     uint8_t ival = bfx_32(a[p], p_at, field.exp);
     uint8_t jval = bfx_32(a[q], q_at, field.exp);
     a[p] = bfd_32(a[p], p_at, field.exp, jval);
