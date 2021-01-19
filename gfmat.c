@@ -85,8 +85,7 @@ uint8_t gfmat_get(gfmat *m, unsigned i, unsigned j) {
     return 0;
   gf field = fields[m->field];
   oblas_word *a = m->bits + i * m->stride;
-  div_t p = div(j, field.vpw);
-  return bfx_32(a[p.quot], p.rem * field.exp, field.exp);
+  return bfx_32(a[j / field.vpw], (j % field.vpw) * field.exp, field.exp);
 }
 
 void gfmat_set(gfmat *m, unsigned i, unsigned j, uint8_t b) {
@@ -94,8 +93,8 @@ void gfmat_set(gfmat *m, unsigned i, unsigned j, uint8_t b) {
     return;
   gf field = fields[m->field];
   oblas_word *a = m->bits + i * m->stride;
-  div_t p = div(j, field.vpw);
-  a[p.quot] = bfd_32(a[p.quot], p.rem * field.exp, field.exp, b % field.len);
+  unsigned q = j / field.vpw;
+  a[q] = bfd_32(a[q], (j % field.vpw) * field.exp, field.exp, b % field.len);
 }
 
 void gfmat_print(gfmat *m, FILE *stream) {
@@ -168,9 +167,9 @@ void gfmat_fill(gfmat *m, unsigned i, uint8_t *dst) {
     oblas_word tmp = a[idx];
     while (tmp > 0) {
       unsigned tz = __builtin_ctz(tmp);
-      div_t q = div(tz, field.exp);
+      unsigned q = tz / field.exp;
       tmp = tmp & (tmp - 1);
-      dst[q.quot + idx * field.vpw] |= 1 << q.rem;
+      dst[q + idx * field.vpw] |= 1 << (tz % field.vpw);
     }
   }
 }
@@ -186,21 +185,33 @@ int gfmat_nnz(gfmat *m, unsigned i, unsigned s, unsigned e) {
   gf field = fields[m->field];
   oblas_word *a = m->bits + i * m->stride;
   unsigned nnz = 0;
-  div_t sd = div(s, field.vpw), ed = div(e, field.vpw);
-  oblas_word masks[2] = {~((1 << sd.rem) - 1), ((1 << ed.rem) - 1)};
+  unsigned sq = s / field.vpw, eq = e / field.vpw;
+  unsigned sr = s % field.vpw, er = e % field.vpw;
+  oblas_word masks[2] = {~((1 << sr) - 1), ((1 << er) - 1)};
 
-  for (int idx = sd.quot; idx <= ed.quot; idx++) {
-    oblas_word tmp = a[idx], z = 0, mask = -1;
+  if (1) {
+    oblas_word tmp = a[sq], z = 0;
     while (tmp > 0) {
-      unsigned tz = __builtin_ctz(tmp) / field.exp;
-      z |= 1 << tz;
+      z = z | 1 << (__builtin_ctz(tmp) / field.exp);
       tmp = tmp & (tmp - 1);
     }
-    if (sd.rem && idx == sd.quot)
-      mask = masks[0];
-    else if (e > ed.quot && idx == ed.quot)
-      mask = masks[1];
-    nnz += __builtin_popcount(z & mask);
+    nnz += __builtin_popcount(z & masks[0]);
+  }
+  for (int idx = sq + 1; idx < eq; idx++) {
+    oblas_word tmp = a[idx], z = 0;
+    while (tmp > 0) {
+      z = z | 1 << (__builtin_ctz(tmp) / field.exp);
+      tmp = tmp & (tmp - 1);
+    }
+    nnz += __builtin_popcount(z);
+  }
+  if (e > eq) {
+    oblas_word tmp = a[eq], z = 0;
+    while (tmp > 0) {
+      z = z | 1 << (__builtin_ctz(tmp) / field.exp);
+      tmp = tmp & (tmp - 1);
+    }
+    nnz += __builtin_popcount(z & masks[1]);
   }
   return nnz;
 }
