@@ -6,9 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "gf2_8_tables.h"
+
 #ifndef OCTMAT_ALIGN
 #define OCTMAT_ALIGN 16
 #endif
+
+#define OCT_LOG GF2_8_LOG
+#define OCT_EXP GF2_8_EXP
+#define OCT_INV GF2_8_INV
 
 typedef struct {
   uint8_t *data;
@@ -26,5 +32,11 @@ typedef struct {
 
 void om_resize(octmat *v, size_t rows, size_t cols);
 void om_destroy(octmat *v);
+
+void oswaprow(uint8_t *a, size_t i, size_t j, size_t k);
+void oaxpy(uint8_t *a, uint8_t *b, size_t i, size_t j, size_t k, uint8_t u);
+void oaddrow(uint8_t *a, uint8_t *b, size_t i, size_t j, size_t k);
+void oscal(uint8_t *a, size_t i, size_t k, uint8_t u);
+void oaxpy_b32(uint8_t *a, uint32_t *b, size_t i, size_t k, uint8_t u);
 
 #endif

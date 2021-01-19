@@ -3,7 +3,7 @@ CFLAGS += -funroll-loops -ftree-vectorize
 #CFLAGS += -fopt-info-vec
 CFLAGS += -Wno-unused
 
-OBJ=oblas.o gfmat.o oblas.o oblas_octmat.o binmat.o octmat.o
+OBJ=oblas.o gfmat.o oblas.o binmat.o octmat.o
 
 all: liboblas.a
 
