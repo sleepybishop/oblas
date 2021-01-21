@@ -36,12 +36,13 @@ void oaxpy(octmat *a, octmat *b, unsigned i, unsigned j, uint8_t u) {
   if (u == 0)
     return;
 
-  if (u == 1)
+  if (u == 1) {
     oblas_xor(ap, bp, a->stride);
-
-  const uint8_t *urow_hi = GF2_8_SHUF_HI + (u * 16);
-  const uint8_t *urow_lo = GF2_8_SHUF_LO + (u * 16);
-  oblas_axpy(ap, bp, a->stride, urow_lo, urow_hi);
+  } else {
+    const uint8_t *urow_hi = GF2_8_SHUF_HI + (u * 16);
+    const uint8_t *urow_lo = GF2_8_SHUF_LO + (u * 16);
+    oblas_axpy(ap, bp, a->stride, urow_lo, urow_hi);
+  }
 }
 
 void oaddrow(octmat *a, octmat *b, unsigned i, unsigned j) {
