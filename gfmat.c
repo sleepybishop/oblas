@@ -184,15 +184,16 @@ unsigned gfmat_nnz(gfmat *m, unsigned i, unsigned s, unsigned e) {
   unsigned sr = s % field.vpw, er = e % field.vpw;
   oblas_word masks[2] = {~((1 << sr) - 1), ((1 << er) - 1)};
 
-  if (1) {
+  if (sr) {
     oblas_word tmp = a[sq], z = 0;
     while (tmp > 0) {
       z = z | 1 << (__builtin_ctz(tmp) / field.exp);
       tmp = tmp & (tmp - 1);
     }
     nnz += __builtin_popcount(z & masks[0]);
+    s++;
   }
-  for (unsigned idx = sq + 1; idx < eq; idx++) {
+  for (unsigned idx = s; idx < eq; idx++) {
     oblas_word tmp = a[idx], z = 0;
     while (tmp > 0) {
       z = z | 1 << (__builtin_ctz(tmp) / field.exp);
