@@ -1,4 +1,4 @@
-#include "oblas.h"
+#include "gfmat.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -11,7 +11,7 @@ enum {
   POLY_GF2_8 = 285, /* x^8    + x^4 + x^3 + x^2     + 1 */
 };
 
-static const gf fields[] = {
+static const gfmat_field fields[] = {
     {.field = GF2_1, .exp = 1, .len = 1 << 1, .poly = POLY_GF2_1},
     {.field = GF2_2, .exp = 2, .len = 1 << 2, .poly = POLY_GF2_2},
     {.field = GF2_4, .exp = 4, .len = 1 << 4, .poly = POLY_GF2_4},
@@ -26,9 +26,9 @@ typedef struct {
   uint8_t SHUF_HI[(UINT8_MAX + 1) * 16];
 } gftbl;
 
-void fill_tabs(const gf_field f, gftbl *tabs) {
+void fill_tabs(const gfmat_type f, gftbl *tabs) {
   uint8_t o = 1;
-  gf field = fields[f];
+  gfmat_field field = fields[f];
   tabs->EXP[field.exp] = 0;
   for (int i = 0; i < field.exp; i++, o <<= 1) {
     tabs->EXP[i] = o;
@@ -63,8 +63,8 @@ void fill_tabs(const gf_field f, gftbl *tabs) {
   }
 }
 
-void fill_shuffle_tabs(const gf_field f, gftbl *tabs) {
-  gf field = fields[f];
+void fill_shuffle_tabs(const gfmat_type f, gftbl *tabs) {
+  gfmat_field field = fields[f];
 
   for (int i = 0; i < field.len; i++) {
     uint8_t *tab_lo_row = tabs->SHUF_LO + i * 16;
@@ -115,7 +115,7 @@ void print_tab(FILE *stream, const uint8_t *tab, size_t len, size_t loop) {
   fprintf(stream, "};\n\n");
 }
 
-void print_tabs(FILE *stream, const gf field, const gftbl *tabs) {
+void print_tabs(FILE *stream, const gfmat_field field, const gftbl *tabs) {
   char *pfx[] = {"GF2_1", "GF2_2", "GF2_4", "GF2_8"},
        *prefix = pfx[field.field];
 
@@ -145,27 +145,27 @@ void print_tabs(FILE *stream, const gf field, const gftbl *tabs) {
 
 int main(int argc, char *argv[]) {
   gftbl tabs;
-  gf_field field;
+  gfmat_type type;
   if (argc != 2)
     return 0;
   unsigned exp = strtol(argv[1], NULL, 10);
   switch (exp) {
   case 2:
-    field = GF2_2;
+    type = GF2_2;
     break;
   case 4:
-    field = GF2_4;
+    type = GF2_4;
     break;
   case 8:
-    field = GF2_8;
+    type = GF2_8;
     break;
   default:
     return -1;
   }
 
-  fill_tabs(field, &tabs);
-  fill_shuffle_tabs(field, &tabs);
-  print_tabs(stdout, fields[field], &tabs);
+  fill_tabs(type, &tabs);
+  fill_shuffle_tabs(type, &tabs);
+  print_tabs(stdout, fields[type], &tabs);
 
   return 0;
 }

@@ -3,8 +3,20 @@
 
 #include "oblas.h"
 
+typedef enum { GF2_1 = 0, GF2_2 = 1, GF2_4 = 2, GF2_8 = 3 } gfmat_type;
+
 typedef struct {
-  gf_field field;
+  gfmat_type field;
+  unsigned vpw;
+  unsigned exp;
+  unsigned len;
+  unsigned poly;
+  const uint8_t *shuf_lo;
+  const uint8_t *shuf_hi;
+} gfmat_field;
+
+typedef struct {
+  gfmat_type field;
   unsigned rows;
   unsigned cols;
   unsigned stride;
@@ -12,7 +24,7 @@ typedef struct {
   oblas_word *bits;
 } gfmat;
 
-gfmat *gfmat_new(gf_field field, unsigned rows, unsigned cols);
+gfmat *gfmat_new(gfmat_type field, unsigned rows, unsigned cols);
 gfmat *gfmat_copy(gfmat *_m);
 void gfmat_free(gfmat *m);
 uint8_t gfmat_get(gfmat *m, unsigned i, unsigned j);

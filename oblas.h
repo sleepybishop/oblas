@@ -8,22 +8,10 @@
 
 #define GF_ADD(a, b) ((a) ^ (b))
 #define GF_SUB(a, b) ((a) ^ (b))
-#define GF_MUL(t, a, b) (t##_EXP[t##_LOG[a] + t##_LOG[b]])
+#define GF_MUL(t, a, b) ((a == 0 || b == 0) ? 0 : (t##_EXP[t##_LOG[a] + t##_LOG[b]]))
 #define GF_DIV(t, a, b, s) (t##_EXP[t##_LOG[a] - t##_LOG[b] + (s - 1)])
 
 #define oblas_word uint32_t
-
-typedef enum { GF2_1 = 0, GF2_2 = 1, GF2_4 = 2, GF2_8 = 3 } gf_field;
-
-typedef struct {
-  gf_field field;
-  unsigned vpw;
-  unsigned exp;
-  unsigned len;
-  unsigned poly;
-  const uint8_t *shuf_lo;
-  const uint8_t *shuf_hi;
-} gf;
 
 uint32_t bfd_32(uint32_t word, uint8_t at, uint8_t len, uint8_t val);
 uint32_t bfx_32(uint32_t word, uint8_t at, uint8_t len);

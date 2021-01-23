@@ -10,7 +10,7 @@
 #define OCTMAT_ALIGN 16
 #endif
 
-static const gf fields[] = {
+static const gfmat_field fields[] = {
     {
         .field = GF2_1,
         .exp = 1,
@@ -45,7 +45,7 @@ static const gf fields[] = {
 
 #define ALIGN_TO(k, a) (((k) / (a)) + (((k) % (a)) ? 1 : 0)) * (a)
 
-gfmat *gfmat_new(gf_field field, unsigned rows, unsigned cols) {
+gfmat *gfmat_new(gfmat_type field, unsigned rows, unsigned cols) {
   gfmat *m = calloc(1, sizeof(gfmat));
   unsigned vpw = fields[field].vpw;
   m->field = field;
@@ -83,7 +83,7 @@ void gfmat_free(gfmat *m) {
 uint8_t gfmat_get(gfmat *m, unsigned i, unsigned j) {
   if (i >= m->rows || j >= m->cols)
     return 0;
-  gf field = fields[m->field];
+  gfmat_field field = fields[m->field];
   oblas_word *a = m->bits + i * m->stride;
   return bfx_32(a[j / field.vpw], (j % field.vpw) * field.exp, field.exp);
 }
@@ -91,7 +91,7 @@ uint8_t gfmat_get(gfmat *m, unsigned i, unsigned j) {
 void gfmat_set(gfmat *m, unsigned i, unsigned j, uint8_t b) {
   if (i >= m->rows || j >= m->cols)
     return;
-  gf field = fields[m->field];
+  gfmat_field field = fields[m->field];
   oblas_word *a = m->bits + i * m->stride;
   unsigned q = j / field.vpw;
   a[q] = bfd_32(a[q], (j % field.vpw) * field.exp, field.exp, b % field.len);
@@ -161,7 +161,7 @@ void gfmat_zero(gfmat *a, unsigned i) {
 }
 
 void gfmat_fill(gfmat *m, unsigned i, uint8_t *dst) {
-  gf field = fields[m->field];
+  gfmat_field field = fields[m->field];
   oblas_word *a = m->bits + i * m->stride;
   for (unsigned idx = 0; idx < m->stride; idx++) {
     oblas_word tmp = a[idx];
@@ -177,7 +177,7 @@ void gfmat_fill(gfmat *m, unsigned i, uint8_t *dst) {
 unsigned gfmat_nnz(gfmat *m, unsigned i, unsigned s, unsigned e) {
   if (i >= m->rows || s < 0 || s > e || e > (m->cols + 1))
     return 0;
-  gf field = fields[m->field];
+  gfmat_field field = fields[m->field];
   oblas_word *a = m->bits + i * m->stride;
   unsigned nnz = 0;
   unsigned sq = s / field.vpw, eq = e / field.vpw;
@@ -215,7 +215,7 @@ void gfmat_swapcol(gfmat *m, unsigned i, unsigned j) {
   if (i == j)
     return;
 
-  gf field = fields[m->field];
+  gfmat_field field = fields[m->field];
   oblas_word *a = m->bits;
   unsigned p = i / field.vpw;
   unsigned q = j / field.vpw;

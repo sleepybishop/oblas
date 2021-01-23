@@ -15,3 +15,4 @@ Edit `tablegen.c` to change polynomials.
  - CLMUL support
  - AES-NI support
  - ARM-v8 crypto extensions support
+ - common multibyte fields (GF2_16 etc)
