@@ -12,7 +12,5 @@ blas-like routines to solve systems in finite fields [gf2, gf4, gf16 and gf256]
 Edit `tablegen.c` to change polynomials.
 
 #### TODO
- - CLMUL support
  - AES-NI support
- - ARM-v8 crypto extensions support
  - common multibyte fields (GF2_16 etc)
