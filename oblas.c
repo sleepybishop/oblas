@@ -38,10 +38,14 @@ void oblas_swap(uint8_t *a, uint8_t *b, size_t k) {
 #ifdef OBLAS_AVX
 #include "oblas_avx.c"
 #else
+#ifdef OBLAS_AVX512
+#include "oblas_avx512.c"
+#else
 #ifdef OBLAS_NEON
 #include "oblas_neon.c"
 #else
 #include "oblas_ref.c"
+#endif
 #endif
 #endif
 #endif
